@@ -1,0 +1,8 @@
+map ,w :action GoFmtFileAction<CR>:action SaveDocument<CR>
+
+# set disable the annoying bell sound https://superuser.com/a/677312
+set visualbell
+set noerrorbells
+
+# vim-sneak: https://github.com/Mishkun/ideavim-sneak
+set sneak
