@@ -1,3 +1,7 @@
+[include]
+
+	path = .gitconfig_user
+
 [core]
 
 	# Use custom `.gitignore` and `.gitattributes`
