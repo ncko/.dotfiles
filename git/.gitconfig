@@ -76,8 +76,6 @@
 
 [user]
 
-	name = Nick Olsen
-	email = hello@ncko.me
 	editor = nvim
 
 [pull]
