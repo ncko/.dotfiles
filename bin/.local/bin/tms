@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# tmux-sessionizer
+# Stolen from the Primeagen
+
 session=$(find ~ ~/projects/ncko -mindepth 1 -maxdepth 1 -type d | fzf)
 session_name=$(basename "$session" | tr . _)
 in_tmux_session=$TMUX
