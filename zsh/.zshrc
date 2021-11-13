@@ -76,6 +76,7 @@ HIST_STAMPS="yyyy-mm-dd"
 plugins=(
   git
   zsh-autosuggestions
+  vi-mode
 )
 
 source $ZSH/oh-my-zsh.sh
