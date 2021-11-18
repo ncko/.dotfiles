@@ -1,9 +1,6 @@
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
-export PATH=$HOME/Library/Python/3.8/bin:$PATH
-export PATH=/opt/homebrew/bin:$PATH
-
 # Path to your oh-my-zsh installation.
 ZSH_DISABLE_COMPFIX=true
 export ZSH="$HOME/.oh-my-zsh"
@@ -66,7 +63,7 @@ ZSH_THEME="robbyrussell"
 HIST_STAMPS="yyyy-mm-dd"
 
 # Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=~/projects/ncko/dotfiles/custom
+ZSH_CUSTOM=~/.dotfiles/omz-custom
 
 # Which plugins would you like to load?
 # Standard plugins can be found in ~/.oh-my-zsh/plugins/*
@@ -99,12 +96,3 @@ export EDITOR=vim
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 #
-
-# Created by `pipx` on 2021-10-11 05:20:52
-export PATH="$PATH:/Users/$USER/.local/bin"
-
-# load nvm
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
