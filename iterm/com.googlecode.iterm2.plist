@@ -412,7 +412,7 @@
 			<key>Guid</key>
 			<string>A2B19533-FE1C-4C52-BC5D-485F434F9F93</string>
 			<key>Has Hotkey</key>
-			<true/>
+			<false/>
 			<key>Hide After Opening</key>
 			<false/>
 			<key>Horizontal Spacing</key>
@@ -422,15 +422,15 @@
 			<key>HotKey Alternate Shortcuts</key>
 			<array/>
 			<key>HotKey Characters</key>
-			<string>0</string>
+			<string></string>
 			<key>HotKey Characters Ignoring Modifiers</key>
-			<string>0</string>
+			<string></string>
 			<key>HotKey Key Code</key>
-			<integer>29</integer>
+			<integer>0</integer>
 			<key>HotKey Modifier Activation</key>
 			<integer>0</integer>
 			<key>HotKey Modifier Flags</key>
-			<integer>1048576</integer>
+			<integer>0</integer>
 			<key>HotKey Window Animates</key>
 			<false/>
 			<key>HotKey Window AutoHides</key>
