@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+sketch_project=~/projects/ncko/sketches
+
+if [[ $1 == "new" ]]; then
+    new_sketch_directory=$sketch_project/deck/$2
+    git clone https://github.com/Gaweph/p5-typescript-starter $new_sketch_directory > /dev/null 2>&1
+    cd $new_sketch_directory
+    rm -fr package-lock.json README.md LICENSE p5-typescript-demo.png .git/
+    yarn > /dev/null 2>&1
+    echo $new_sketch_directory
+else
+    echo "Usage:"
+    echo "  - cd \$(sketch new <sketch-name>)"
+fi
