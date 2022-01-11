@@ -6,3 +6,9 @@ set noerrorbells
 
 # vim-sneak: https://github.com/Mishkun/ideavim-sneak
 set sneak
+
+# copy unnamed register to clipboard (for copy/pasting yanks)
+set clipboard+=unnamed
+
+set number
+set relativenumber
