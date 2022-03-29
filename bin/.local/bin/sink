@@ -1,7 +1,15 @@
 #!/usr/bin/env zsh
 
-# sync notes
+# sink notes to github
+
 cd ~/projects/ncko/notes
+
+git stash push -u
+
+git pull
+
+git stash pop
+
 git add . && \
     git commit -m "$(hostname) | $(date "+%Y-%m-%d %H:%M:%S")" && \
     git push
