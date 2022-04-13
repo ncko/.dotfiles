@@ -1,30 +1,6 @@
 #!/usr/bin/env bash
 
-#vault='chaos'
-#obsidian="obsidian://open?vault=$vault"
-#project_root="/Users/ncko/projects/ncko/brain/$vault"
-#
-#if [[ $1 = "new-journal" ]]; then
-    #filename="$(date "+%Y-%m-%d")"
-    #journal_path="20 office/10 journal/$filename.md"
-    #file="$project_root/$journal_path"
-    #url=$( date "+${obsidian}&file=$filename" )
-    #
-    #touch "${file}"
-    #
-    #if ! pgrep Obsidian >/dev/null; then
-        #open -a 'Obsidian'
-        #sleep 1
-    #fi
-#
-    #open "${url}"
-#else
-    #echo "must pass subcommand: 'new-journal'"
-#fi
-#
-
 add_cmd="things:///add"
-
 
 if [[ $1 = "add" ]]; then
     full_url=$(echo "${add_cmd}?title=${2}" | sed -e s/\ /%20/g)
