@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# helpful docs on things url scheme
+# https://culturedcode.com/things/support/articles/2803573/
+
 add_cmd="things:///add"
 
 if [[ $1 = "add" ]]; then
