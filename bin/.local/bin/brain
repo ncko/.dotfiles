@@ -6,7 +6,7 @@ project_root="/Users/ncko/projects/ncko/brain/$vault"
 
 if [[ $1 = "new-journal" ]]; then
     filename="$(date "+%Y-%m-%d")"
-    journal_path="20 office/10 journal/$filename.md"
+    journal_path="2 Areas/1 journal/$filename.md"
     file="$project_root/$journal_path"
     url=$( date "+${obsidian}&file=$filename" )
     
