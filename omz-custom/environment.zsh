@@ -32,3 +32,9 @@ load-nvmrc
 # vi mode
 VI_MODE_RESET_PROMPT_ON_MODE_CHANGE=true
 VI_MODE_SET_CURSOR=true
+
+
+# per-machine environment vars
+if [[ -f ./machine.zsh ]]; then
+    source ./machine.zsh
+fi

@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 
-vault='chaos'
 obsidian="obsidian://open?vault=$vault"
-project_root="/Users/ncko/projects/ncko/brain/$vault"
 
 if [[ $1 = "new-journal" ]]; then
     filename="$(date "+%Y-%m-%d")"
     journal_path="2 Areas/1 journal/$filename.md"
-    file="$project_root/$journal_path"
+    file="$VAULT_PATH/$journal_path"
     url=$( date "+${obsidian}&file=$filename" )
     
     touch "${file}"
@@ -21,5 +19,4 @@ if [[ $1 = "new-journal" ]]; then
 else
     echo "must pass subcommand: 'new-journal'"
 fi
-
 
