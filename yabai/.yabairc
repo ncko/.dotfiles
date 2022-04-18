@@ -1,6 +1,0 @@
-#!/usr/bin/env sh
-
-# uncomment the following line for debugging
-#   log files can be found in HOMEBREW_PREFIX/var/log/yabai
-# yabai -m config debug_output on
-
