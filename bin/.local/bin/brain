@@ -4,7 +4,7 @@ obsidian="obsidian://open?vault=$vault"
 
 if [[ $1 = "new-journal" ]]; then
     filename="$(date "+%Y-%m-%d")"
-    journal_path="2 Areas/1 journal/$filename.md"
+    journal_path="2 Areas/4 workflows/journal/$filename.md"
     file="$VAULT_PATH/$journal_path"
     url=$( date "+${obsidian}&file=$filename" )
     
