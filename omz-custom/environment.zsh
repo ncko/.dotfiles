@@ -13,7 +13,6 @@ export PATH="$PATH:/Users/$USER/.local/bin"
 
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-
 # https://medium.com/@kinduff/automatic-version-switch-for-nvm-ff9e00ae67f3#:~:text=The%20automatic%20switch%20will%20switch,shell%20to%20make%20this%20work.
 # takes forever to load whenever you change directories or open a new terminal
 # so disabling for now
@@ -29,7 +28,6 @@ export PATH="$PATH:/Users/$USER/.local/bin"
 #add-zsh-hook chpwd load-nvmrc
 #load-nvmrc
 
-
 # vi mode
 VI_MODE_RESET_PROMPT_ON_MODE_CHANGE=true
 VI_MODE_SET_CURSOR=true
@@ -38,3 +36,11 @@ VI_MODE_SET_CURSOR=true
 if [[ -f ./machine.zsh ]]; then
     source ./machine.zsh
 fi
+
+# Load pyenv automatically
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+# load pyenv-virtualenv automatically
+# eval "$(pyenv virtualenv-init -)"
