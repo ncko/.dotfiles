@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+# clone to deck
+
+cd ~/deck && git clone $1
