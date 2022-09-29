@@ -2,5 +2,18 @@
 
 current_php_version="$(php -v | head -1 | gsed -E s/PHP\ \(\[0-9\]\.\[0-9\]\).\*/\\1/)"
 
-brew unlink php@$current_php_version
-brew link php@$1
+if [ "$current_php_version" = "7.2" ]
+then
+    brew unlink shivammathur/php/php@7.2
+else
+    brew unlink php@$current_php_version
+fi
+
+
+if [ "$1" = "7.2" ]
+then
+    brew link shivammathur/php/php@7.2
+else
+    brew link php@$1
+fi
+
