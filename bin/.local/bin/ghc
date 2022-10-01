@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
-# clone to deck
 
-cd ~/deck && git clone $1
+# clones a repository from github to the ~/projects/<owner>/<project_name>
+# For example: `ghc ncko/dotfiles` will clone git@github.com:ncko/dotfiles to ~/projects/ncko/dotfiles
+
+
+owner=$(echo $1 | cut -d "/" -f 1)
+project_name=$(echo $1 | cut -d "/" -f 2)
+
+git clone gh:$1 ~/projects/$1
+
