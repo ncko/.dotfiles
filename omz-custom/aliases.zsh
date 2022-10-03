@@ -1,6 +1,7 @@
 # aliases
 alias vim="nvim"
 alias sed="gsed"
+alias awk="gawk"
 
 
 
