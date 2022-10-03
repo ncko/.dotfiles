@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+
+import boto3
+from pprint import pprint
+
+ec2 = boto3.client("ec2")
+response = ec2.describe_instances()
+
+
+reservations = response['Reservations']
+
+for reservation in reservations:
+    instances = reservation['Instances']
+
+    for instance in instances:
+        private_ip = instance.get('PrivateIpAddress')
+        public_ip = instance.get('PublicIpAddress')
+        name = list(filter(lambda tag: tag['Key'] == 'Name', instance['Tags'])) if instance.get('Tags') else  None
+
+        state = instance['State']['Name'] if instance.get('State') else None
+
+        if not name or len(name) < 0 or state != "running":
+            continue
+
+        name = name[0]['Value']
+
+        print(f"{name} {private_ip}")
+
