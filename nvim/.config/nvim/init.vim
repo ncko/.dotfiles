@@ -11,13 +11,12 @@ set smartindent
 call plug#begin('~/.vim/plugged')
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
-Plug 'ayu-theme/ayu-vim'
+Plug 'EdenEast/nightfox.nvim'
 call plug#end()
 
 " COLOR SCHEME
 set termguicolors
-let ayucolor="dark"
-colorscheme ayu
+colorscheme nightfox
 
 " REMAPS
 " nnoremap <leader>pv :Vex<CR>
