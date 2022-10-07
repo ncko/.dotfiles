@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+# Creates a new folder and opens a tmux session in that project
+# - `proj <project_name> <optional:location>`
+# - if location is omitted, it will create a folder ~/deck/<project_name>
+# - if location is specified, it will create a fodler in ~/projects/<location>/<project_name>
+
+project_name=$1
+projects_folder=${2:-deck}
+in_tmux_session=$TMUX
+tmux_running=$(pgrep tmux)
+
+if [ $# -eq 0 ]; then
+    echo "No arguments supplied"
+    exit
+fi
+
+
+if [ $projects_folder == "deck" ]; then
+    location="/Users/ncko/deck/$project_name"
+else
+    location="/Users/ncko/projects/$projects_folder/$project_name"
+fi
+
+mkdir -p $location
+
+
+# if not in tmux session and tmux is not running
+if [[ -z $in_tmux_session ]] && [[ -z $tmux_running ]]; then
+    tmux new-session -s $project_name -c $location
+    exit 0
+fi
+
+# if tmux does not have a session with the name $project_name
+if ! tmux has-session -t "$project_name" 2> /dev/null; then
+    tmux new-session -s "$project_name" -c "$location" -d
+fi
+
+# if not in tmux session and tmux is running
+if [[ -z $in_tmux_session ]]; then
+    tmux attach-session -t $project_name
+else
+    tmux switch-client -t $project_name
+fi
