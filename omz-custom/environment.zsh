@@ -44,3 +44,10 @@ eval "$(pyenv init -)"
 
 # load pyenv-virtualenv automatically
 # eval "$(pyenv virtualenv-init -)"
+#
+
+# aws tab completion
+autoload bashcompinit && bashcompinit
+autoload -Uz compinit && compinit
+complete -C '/usr/local/bin/aws_completer' aws
+
