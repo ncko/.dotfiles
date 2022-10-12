@@ -96,3 +96,6 @@ export EDITOR=vim
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 #
+
+autoload -U +X bashcompinit && bashcompinit
+complete -o nospace -C /opt/homebrew/bin/terraform terraform
