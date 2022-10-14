@@ -1,0 +1,5 @@
+{
+  "aws-cli": {
+    "test test": "Hello World!"
+  }
+}
