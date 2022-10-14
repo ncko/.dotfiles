@@ -8,5 +8,10 @@
   },
   "gh": {
     "repo: create a private repo from current directory": "gh repo create <project_name> --private --source=. --remote=upstream"
+  },
+  "bash": {
+    "default values": "val=${1:-$default_val}",
+    "bold text": "bold=$(tput bold)\nnormal=$(tput sgr0)\necho \"${bold}bold text${normal} normal text\"",
+    "current script's path": "script_path=`dirname -- \"\\`readlink -f -- \"$0\";\\`\"`"
   }
 }
