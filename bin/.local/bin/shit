@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-shit_file="$HOME/.local/share/shit/shits.json"
+#shit_file="$HOME/.local/share/shit/shits.json"
+shit_file="./data.json"
 
 bold=$(tput bold)
 normal=$(tput sgr0)
@@ -73,7 +74,7 @@ function help() {
   echo "${bold}USAGE${normal}"
   echo "  shit <command> [flags]"
   echo ""
-  echo "${bold}SUBCOMMANDS${normal}"
+  echo "${bold}COMMANDS${normal}"
   echo "  add:    add a new shit"
   echo "  delete: delete an existing shit"
   echo "  edit:   edit an existing shit"
