@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-#shit_file="$HOME/.local/share/shit/shits.json"
-shit_file="./data.json"
+shit_file="$HOME/.local/share/shit/shits.json"
+#shit_file="./data.json"
 
 bold=$(tput bold)
 normal=$(tput sgr0)
