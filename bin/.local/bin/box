@@ -1,0 +1,68 @@
+#!/usr/bin/env sh
+
+##
+# Usage
+# - Generate ec2 instance cache file - `box generate`
+# - SSH to an ec2 instance - `box [-u <username>]`
+# - open a tunnel to an ec2 instance - `box tunnel`
+##
+
+default_username="ubuntu"
+pem="~/.ssh/ncko.pem"
+
+function generate() {
+    mkdir ~/.cache/ncko > /dev/null &> /dev/null
+    list-boxes > ~/.cache/ncko/boxes
+    numboxes=`cat ~/.cache/ncko/boxes | wc -l`
+    echo "$numboxes boxes written"
+}
+
+function get_ip() {
+    echo $(cat ~/.cache/ncko/boxes | fzf | cut -w -f 2)
+}
+
+function tunnel() {
+    get_ip | xargs -I {} tmux split-window -h -l 100 ssh -i $pem -v -N -R 9001:localhost:9001 {}
+}
+
+function connect() {
+    username=${1:-$default_username}
+    get_ip | xargs -I {} tmux split-window -h ssh -i $pem $username@{}
+}
+
+function help() {
+    bold=$(tput bold)
+    normal=$(tput sgr0)
+
+    echo "${bold}USAGE${normal}"
+    echo "  box <command> [flags]"
+    echo ""
+    echo "${bold}COMMANDS${normal}"
+    echo "  generate:   generate list of boxes"
+    echo "  tunnel:     open a tunnel to a box"
+    echo ""
+    echo "${bold}FLAGS${normal}"
+    echo "  -h    show this message"
+    echo ""
+    echo "${bold}GETTING STARTED${normal}"
+    echo "First make sure you're logged in to aws-cli"
+    echo "then run the generate command:"
+    echo "  $ box generate"
+    echo ""
+    echo "Now connect using the -u flag to pass your username"
+    echo "  $ box -u username"
+    echo ""
+    echo "You can also configure 'default_username' at the"
+    echo "top of this script to just use the box command"
+    echo "  $ box"
+}
+
+case $1 in
+    generate) generate;;
+    tunnel) tunnel;;
+    "") connect;;
+    -u) shift && connect $@;;
+    -h) help;;
+    *) help && exit 1;;
+esac
+
