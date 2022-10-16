@@ -1,42 +1,83 @@
 #!/usr/bin/env bash
 
-# proj ncko/what # ~/projects/ncko/what
-# proj deck/what # ~/deck/what
+# new usage
+# proj -d what            # new project folder in ~/deck/what
+# proj -n ncko/what       # new project folder in ~/projects/ncko/what
+# proj -c crossfit/cfweb  # clone repo to ~/projects/crossfit/cfweb
+# proj                    # open an existing folder
 
-in_tmux_session=$TMUX
-tmux_running=$(pgrep tmux)
+deck_path=`realpath ~/deck`
+projects_path=`realpath ~/projects`
+
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+function default() {
+  dotfiles=`realpath ~/.dotfiles`
+  deck_and_projects=`find ~/deck ~/projects/* -mindepth 1 -maxdepth 1 -type d`
+  all_projects=`echo "$deck_and_projects\n$dotfiles"`
+  session=`printf "$all_projects" | fzf`
+
+  open-session "$session"
+  exit
+}
+
+function on_deck() {
+  mkdir -p "$deck_path/${OPTARG}"
+  open-session "$deck_path/${OPTARG}"
+  exit
+}
+
+function new_project() {
+  mkdir -p "$projects_path/${OPTARG}"
+  open-session "$projects_path/${OPTARG}"
+  exit
+}
+
+function clone_project() {
+  git clone gh:"${OPTARG}" "$projects_path/${OPTARG}"
+  open-session "$projects_path/${OPTARG}"
+  exit
+}
+
+function help() {
+  echo "${bold}USAGE${normal}"
+  echo "  proj [flags]"
+  echo ""
+  echo "${bold}FLAGS${normal}"
+  echo "  -c    clone a repo"
+  echo "  -d    start a new project on deck"
+  echo "  -n    start a new project in your projects folder"
+  echo "  -h    print this message"
+  echo ""
+  echo "${bold}EXAMPLES${normal}"
+  echo "To open an existing project"
+  echo "  $ proj"
+  echo ""
+  echo "clone a repo to ~/projects/ncko"
+  echo "  $ proj -c ncko/.dotfiles"
+  echo ""
+  echo "create a new project on deck"
+  echo "  $ proj -d new_project"
+  echo ""
+  echo "create a new project in ~/projects/<owner>/<project_name>"
+  echo "  $ proj -n ncko/my_new_project"
+  echo ""
+}
 
 if [ $# -eq 0 ]; then
-    echo "No arguments supplied"
-    exit 1
+  default
 fi
 
+while getopts "d:n:c:h" option
+  do
+    case "${option}" in
+      d) on_deck;;
+      n) new_project;;
+      c) clone_project;;
+      h) help && exit;;
+    esac
+  done
 
-prefix=`echo $1 | cut -d / -f 1`
-project_name=`echo $1 | cut -d / -f 2`
+help && exit 1
 
-if [ $prefix == "deck" ]; then
-  location="/Users/ncko/$1"
-else
-  location="/Users/ncko/projects/$1"
-fi
-
-mkdir -p $location
-
-# if not in tmux session and tmux is not running
-if [[ -z $in_tmux_session ]] && [[ -z $tmux_running ]]; then
-    tmux new-session -s $project_name -c $location
-    exit 0
-fi
-
-# if tmux does not have a session with the name $project_name
-if ! tmux has-session -t "$project_name" 2> /dev/null; then
-    tmux new-session -s "$project_name" -c "$location" -d
-fi
-
-# if not in tmux session and tmux is running
-if [[ -z $in_tmux_session ]]; then
-    tmux attach-session -t $project_name
-else
-    tmux switch-client -t $project_name
-fi
