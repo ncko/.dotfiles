@@ -4,7 +4,7 @@
     "logs: get events by log group": "aws logs tail $(aws logs describe-log-groups | jq \".logGroups[].logGroupName\" | tr -d \\\" | fzf) --follow"
   },
   "tmux": {
-    "sessions: kill session by name": "tmux kill-session -t $(tmux list-sessions | awk '{print $1}' | tr -d : | fzf"
+    "sessions: kill session by name": "tmux kill-session -t $(tmux list-sessions | awk '{print $1}' | tr -d : | fzf)"
   },
   "gh": {
     "repo: create a private repo from current directory": "gh repo create <project_name> --private --source=. --remote=upstream"
