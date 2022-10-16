@@ -13,6 +13,7 @@
     "_default values": "val=${1:-$default_val}",
     "set bold text": "bold=$(tput bold)\nnormal=$(tput sgr0)\necho \"${bold}bold text${normal} normal text\"",
     "get current script's path": "script_path=`dirname -- \"\\`readlink -f -- \"$0\";\\`\"`",
-    "get exit code": "$? # holds the exit code of the previous command (https://madflojo.medium.com/understanding-exit-codes-in-bash-6942a8b96ce5)"
+    "get exit code": "$? # holds the exit code of the previous command (https://madflojo.medium.com/understanding-exit-codes-in-bash-6942a8b96ce5)",
+    "get absolute path from relative": "realpath ~/.dotfiles"
   }
 }
