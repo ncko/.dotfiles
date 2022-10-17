@@ -1,5 +1,6 @@
 export PATH=$HOME/Library/Python/3.9/bin:$PATH
 export PATH=/opt/homebrew/bin:$PATH
+export PATH=$PATH:/Users/ncko/.cargo/bin
 
 # Created by `pipx` on 2021-10-11 05:20:52
 export PATH="$PATH:/Users/$USER/.local/bin"
