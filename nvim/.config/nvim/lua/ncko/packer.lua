@@ -1,6 +1,6 @@
 return require("packer").startup(function()
     use("wbthomason/packer.nvim")
-    use("sbdchd/neoformat")
+    use("sbdchd/neoformat") -- still trying to get this to work
 
     use("nvim-lua/plenary.nvim")
     use("nvim-lua/popup.nvim")
