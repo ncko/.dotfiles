@@ -1,1 +1,5 @@
 machine.zsh
+nvim/.config/gh/
+nvim/.config/yarn/
+keep/.local/state/gh/
+keep/.local/state/nvim/
