@@ -1,7 +1,8 @@
 {
   "aws-cli": {
     "dynamodb: get an item": "aws dynamodb get-item --table-name=$(aws dynamodb list-tables | jq \".TableNames[]\" | tr -d \\\" | fzf) --key='{ \"path\": { \"S\": \"/hello\" } }'",
-    "logs: get events by log group": "aws logs tail $(aws logs describe-log-groups | jq \".logGroups[].logGroupName\" | tr -d \\\" | fzf) --follow --format short"
+    "logs: get events by log group": "aws logs tail $(aws logs describe-log-groups | jq \".logGroups[].logGroupName\" | tr -d \\\" | fzf) --follow --format short",
+    "s3: remove a bucket (force)": "aws s3 rb s3://$(aws s3 ls | awk '{print $3\" \"$1\" \"$2}' | fzf | awk '{print $1}') --force"
   },
   "tmux": {
     "sessions: kill session by name": "tmux kill-session -t $(tmux list-sessions | awk '{print $1}' | tr -d : | fzf)"
@@ -18,6 +19,7 @@
     "get absolute path from relative": "realpath ~/.dotfiles",
     "get random string": "echo $RANDOM | md5sum | head -c 20; echo;",
     "get random string 2": "echo $RANDOM | base64 | head -c 20; echo;",
-    "get random string 3": "openssl rand -hex 20 # or openssl rand -base64 20"
+    "get random string 3": "openssl rand -hex 20 # or openssl rand -base64 20",
+    "getopts": "while getopts \"d:n:h\" option\n  do\n    case \"${option}\" in\n      d) somecommand \"${OPTARG}\";;\n      n)\n        somevar=\"${OPTARG}\"\n        othercommand $somevar\n        ;;\n      h) helpcommand && exit;;\n    esac\n  done\n\nhelp && exit 1"
   }
 }
