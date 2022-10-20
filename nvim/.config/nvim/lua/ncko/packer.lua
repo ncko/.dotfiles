@@ -16,23 +16,9 @@ return require("packer").startup(function()
         branch = 'release'
     }
 
-
-    -- use {
-        -- "neovim/nvim-lspconfig",
-        -- opt = true,
-        -- event = "BufReadPre",
-        -- wants = { "nvim-lsp-installer" },
-        -- config = function()
-            -- require("config.lsp").setup()
-        -- end,
-        -- requires = {
-            -- "williamboman/nvim-lsp-installer",
-        -- },
-    -- }
-
     -- color scheme
-    use("sainnhe/everforest")
     use("gruvbox-community/gruvbox")
+
 
     use("nvim-treesitter/nvim-treesitter", {
         run = function() require('nvim-treesitter.install').update({ with_sync = true }) end,

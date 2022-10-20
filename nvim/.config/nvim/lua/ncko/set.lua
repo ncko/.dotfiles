@@ -3,6 +3,7 @@ vim.opt.timeoutlen = 300
 vim.opt.termguicolors = true
 
 -- editor settings
+vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.scrolloff = 4
 vim.opt.tabstop = 4
