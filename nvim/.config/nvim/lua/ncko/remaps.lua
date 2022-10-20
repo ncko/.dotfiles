@@ -1,6 +1,8 @@
-local nnoremap = require("ncko.keymap").nnoremap
+local keymap = require("ncko.keymap")
+local nnoremap = keymap.nnoremap
+local inoremap = keymap.inoremap
 
-nnoremap("<leader><CR>", ":luafile %<CR>")
+nnoremap("<leader><CR>", ":luafile ~/.dotfiles/nvim/.config/nvim/init.lua<CR>")
 nnoremap("<leader>pv", ":Vex<CR>")
 
 -- window navigation
@@ -19,4 +21,8 @@ nnoremap("<leader>fgc", ":Telescope git_commits<CR>") -- fuzzy find git commits
 -- nnoremap("<leader>fgs", ":Telescope git_stash<CR>") -- fuzzy find git stashes
 -- nnoremap("<leader>fts", ":Telescope treesitter<CR>") -- treesitter
 nnoremap("<leader>ftb", ":Telescope builtin<CR>") -- fuzzy find all telescope builtins
+
+
+-- https://github.com/hashicorp/terraform-ls/blob/main/docs/USAGE.md
+inoremap("<c-space>", "coc#refresh()")
 
