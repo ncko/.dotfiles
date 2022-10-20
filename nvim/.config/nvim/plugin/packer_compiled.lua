@@ -79,11 +79,6 @@ _G.packer_plugins = {
     path = "/Users/ncko/.local/share/nvim/site/pack/packer/start/coc.nvim",
     url = "https://github.com/neoclide/coc.nvim"
   },
-  everforest = {
-    loaded = true,
-    path = "/Users/ncko/.local/share/nvim/site/pack/packer/start/everforest",
-    url = "https://github.com/sainnhe/everforest"
-  },
   gruvbox = {
     loaded = true,
     path = "/Users/ncko/.local/share/nvim/site/pack/packer/start/gruvbox",
