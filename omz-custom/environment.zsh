@@ -5,6 +5,18 @@ export PATH=$PATH:/Users/ncko/.cargo/bin
 # Created by `pipx` on 2021-10-11 05:20:52
 export PATH="$PATH:/Users/$USER/.local/bin"
 
+
+if [[ -f ~/.config/crossfit/environment.zsh ]];
+then
+    source ~/.config/crossfit/environment.zsh
+fi
+
+# per-machine environment vars
+if [[ -f ./machine.zsh ]]; then
+    source ./machine.zsh
+fi
+
+
 ###
 # NVM
 ###
@@ -33,10 +45,6 @@ export PATH="$PATH:/Users/$USER/.local/bin"
 VI_MODE_RESET_PROMPT_ON_MODE_CHANGE=true
 VI_MODE_SET_CURSOR=true
 
-# per-machine environment vars
-if [[ -f ./machine.zsh ]]; then
-    source ./machine.zsh
-fi
 
 # Load pyenv automatically
 export PYENV_ROOT="$HOME/.pyenv"
@@ -51,4 +59,6 @@ eval "$(pyenv init -)"
 autoload bashcompinit && bashcompinit
 autoload -Uz compinit && compinit
 complete -C "$(which aws_completer)" aws
+
+
 
