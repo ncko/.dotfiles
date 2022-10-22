@@ -11,7 +11,8 @@
   },
   "gh": {
     "repo: create a private repo from current directory": "gh repo create <project_name> --private --source=. --remote=upstream",
-    "gist: create private gist": "gh gist create -d \"<description>\" <file> | pbcopy"
+    "gist: create private gist": "gh gist create -d \"<description>\" <file> | pbcopy",
+    "pr: checkout selected pr branch": "git checkout $(gh pr list --json author --json headRefName --json title --json updatedAt --jq '.[] | \"\\(.updatedAt) \\(.author.login) \\(.headRefName) -- \\(.title)\"' | fzf --layout=reverse-list | awk '{print $3}')"
   },
   "bash": {
     "_default values": "val=${1:-$default_val}",
@@ -23,5 +24,8 @@
     "get random string 2": "echo $RANDOM | base64 | head -c 20; echo;",
     "get random string 3": "openssl rand -hex 20 # or openssl rand -base64 20",
     "getopts": "while getopts \"d:n:h\" option\n  do\n    case \"${option}\" in\n      d) somecommand \"${OPTARG}\";;\n      n)\n        somevar=\"${OPTARG}\"\n        othercommand $somevar\n        ;;\n      h) helpcommand && exit;;\n    esac\n  done\n\nhelp && exit 1"
+  },
+  "jq": {
+    "concat strings": "cat whatever.json | jq '.[] | \"\\(.path.to.thing) \\(.anotherpath)\"'"
   }
 }
