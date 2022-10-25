@@ -12,7 +12,8 @@
   "gh": {
     "repo: create a private repo from current directory": "gh repo create <project_name> --private --source=. --remote=upstream",
     "gist: create private gist": "gh gist create -d \"<description>\" <file> | pbcopy",
-    "pr: checkout selected pr branch": "git checkout $(gh pr list --json author --json headRefName --json title --json updatedAt --jq '.[] | \"\\(.updatedAt) \\(.author.login) \\(.headRefName) -- \\(.title)\"' | fzf --layout=reverse-list | awk '{print $3}')"
+    "pr: checkout selected pr branch": "git checkout $(gh pr list --json author --json headRefName --json title --json updatedAt --jq '.[] | \"\\(.updatedAt) \\(.author.login) \\(.headRefName) -- \\(.title)\"' | fzf --layout=reverse-list | awk '{print $3}')",
+    "pr: view prs for current repo": "gh pr view $(gh pr list --author ncko | fzf | awk '{print $1}')"
   },
   "bash": {
     "_default values": "val=${1:-$default_val}",

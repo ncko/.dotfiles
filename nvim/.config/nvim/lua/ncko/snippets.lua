@@ -7,7 +7,7 @@ local snippets = {
     "markdown",
     "php",
     "shell",
-    -- "python",
+    "python",
     -- "css",
     -- "scss",
     -- "html",
