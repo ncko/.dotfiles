@@ -8,6 +8,7 @@ local snippets = {
     "php",
     "shell",
     "python",
+    "go"
     -- "css",
     -- "scss",
     -- "html",

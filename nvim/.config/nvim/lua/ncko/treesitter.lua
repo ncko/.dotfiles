@@ -22,7 +22,8 @@ function M.setup()
             "lua",
             "markdown",
             "vim",
-            "yaml"
+            "yaml",
+            "go"
         },
 
         -- install parsers synchronously (only applied to ensure_installed)
