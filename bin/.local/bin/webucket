@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+
+
+function help() {
+  local bold=$(tput bold)
+  local normal=$(tput sgr0)
+
+  echo "${bold}USAGE${normal}"
+  echo "  webucket [flags]"
+  echo ""
+  echo "${bold}FLAGS${normal}"
+  echo "  -b <bucket_name>"
+  echo "  -l <local_path>"
+  echo "  -h                    print this message"
+  echo ""
+  echo "${bold}EXAMPLES${normal}"
+  echo "Create a new web bucket"
+  echo "  $ webucket create -b mybucket"
+  echo ""
+  echo "Sync a local path to the bucket"
+  echo "  $ webucket sync -b mybucket -l /dist"
+  echo ""
+}
+
+function make_bucket() {
+    while getopts "b:" option
+        do
+            case "${option}" in
+                b) local bucket_name_prefix="${OPTARG}";;
+                /?) help && exit 1;;
+            esac
+        done
+
+    if [ -z $bucket_name_prefix ]; then
+        help && exit 1
+    fi
+    
+    local bucket_name="$bucket_name_prefix-$(openssl rand -hex 3)"
+
+    # make bucket
+    aws s3 mb s3://$bucket_name 
+    
+    # configure website settings for bucket
+    # - when making requests to a directory, s3 will look for an index.html within that directory
+    # - when a 4xx error occurs, will redirect to error.html
+    aws s3 website s3://$bucket_name --index-document index.html --error-document error.html
+
+    # make bucket objects publicly readable
+    # (see contents of /tmp/bucket_policy.json below)
+    echo "{
+        \"Version\": \"2012-10-17\",
+        \"Statement\": [
+            {
+                \"Sid\": \"PublicReadGetObject\",
+                \"Effect\": \"Allow\",
+                \"Principal\": \"*\",
+                \"Action\": \"s3:GetObject\",
+                \"Resource\": \"arn:aws:s3:::$bucket_name/*\"
+            }
+        ]
+    }" > /tmp/bucket_policy.json
+
+    # we have to pipe the policy through json5 or else get a json parsing error by aws-cli
+    # don't know why
+    aws s3api put-bucket-policy --bucket $bucket_name --policy $(cat /tmp/bucket_policy.json | json5)
+
+    # always delete files from tmp when done
+    rm /tmp/bucket_policy.json
+
+    # output bucket url
+    echo "$bucket_name http://$bucket_name.s3-website-$(aws configure get region).amazonaws.com"
+}
+
+# sync to the bucket
+# sync_bucket -b <bucket_name> -l <local_path>
+function sync_bucket() {
+    while getopts "b:l:" option
+    do
+        case "${option}" in
+        b) local bucket_name="${OPTARG}" ;;
+        l) local local_path="${OPTARG}" ;;
+        esac
+    done
+
+
+    if [ -z $bucket_name ] || [ -z $local_path ]; then
+        help && exit 1
+    fi
+
+    aws s3 sync $local_path s3://$bucket_name
+
+    echo "http://$bucket_name.s3-website-$(aws configure get region).amazonaws.com"
+}
+
+
+# webucket create -b bucket_name
+# webucket sync -b bucket_name -l local_path
+
+if [ -z $1 ]; then
+    help && exit 1
+fi
+
+case "$1" in
+    -h) help;;
+    create) shift && make_bucket $@;;
+    sync) shift && sync_bucket $@;;
+    *) help && exit 1;;
+esac
+
+
