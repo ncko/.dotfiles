@@ -36,8 +36,16 @@ function M.setup()
             g = { ":Telescope live_grep<CR>", "Find String in Project" },
             t = { ":Telescope treesitter<CR>", "Find Symbol" }, -- treesitter
         },
+        l = { -- LSP
+            name = "LSP",
+            d = { -- disagnostics
+                e = { ":lua vim.diagnostic.open_float()<cr>" , "Open Disagnostic Float" }, -- TODO: troubleshoot
+                ["["] = { ":lua vim.diagnostic.goto_prev()<cr>", "Previous Diagnostic" },
+                ["]"] = { ":lua vim.diagnostic.goto_next()<cr>", "Next Diagnostic" },
+                q = { ":lua vim.diagnostic.setloclist()<cr>", "Add diagnostics to location list" },
+            }
+        }
     }
-
     whichkey.register(mappings, opts)
 end
 

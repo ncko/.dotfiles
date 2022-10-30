@@ -10,6 +10,7 @@ require("mason-lspconfig").setup({ ensure_installed = { "sumneko_lua" } })
 
 require("ncko.completion").setup()
 require("ncko.terraform").setup()
+require("ncko.languages.php").setup()
 require("ncko.snippets").setup()
 
 vim.cmd "colorscheme gruvbox"
