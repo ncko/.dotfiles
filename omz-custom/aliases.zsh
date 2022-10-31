@@ -6,7 +6,6 @@ alias vimconfig="vim ~/.dotfiles/nvim/.config/nvim/lua/ncko"
 alias vimbin="vim ~/.dotfiles/bin/.local/bin"
 alias vimcfbin="vim ~/projects/ncko/crossfit/.local/bin"
 alias vimdot="vim ~/.dotfiles"
-alias commitrand='git commit -m "$(curl -sk http://whatthecommit.com)"'
 
 alias youtube-dl-best='youtube-dl -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio" '
 alias youtube-dl-480='youtube-dl -f "bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]" '
@@ -20,7 +19,6 @@ alias slc="fc -ln -1 | sed 's/^\*//' >> $HOME/.cache/ncko/saved_cmds"
 alias slg="< $HOME/.cache/ncko/saved_cmds grep"
 
 alias tldrf='tldr --list | fzf --preview "tldr {1} --color=always" --preview-window=right,70% --layout reverse | xargs tldr'
-
 
 # key bindings
 bindkey -s ^f "tms\n"
