@@ -8,7 +8,6 @@ alias vimcfbin="vim ~/projects/ncko/crossfit/.local/bin"
 alias vimdot="vim ~/.dotfiles"
 alias commitrand='git commit -m "$(curl -sk http://whatthecommit.com/index.txt)"'
 
-
 # save last command
 alias slc="fc -ln -1 | sed 's/^\*//' >> $HOME/.cache/ncko/saved_cmds"
 # grep saved commands
