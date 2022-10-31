@@ -32,9 +32,15 @@ function M.setup()
             f = { ":Telescope find_files<CR>", "Find File" },
             c = { ":Telescope current_buffer_fuzzy_find<CR>", "Search in Current Buffer" },
             b = { ":Telescope buffers<CR>", "Find Buffer" },
-            h = { ":Telescope help_tags<CR>", "Find Help" },
             g = { ":Telescope live_grep<CR>", "Find String in Project" },
             t = { ":Telescope treesitter<CR>", "Find Symbol" }, -- treesitter
+            -- h = { ":Telescope help_tags<CR>", "Find Help" },
+            h = {
+                name = "Harpoon",
+                m = { ":lua require('harpoon.mark').add_file()<cr>", "Mark a file" },
+                p = { ":lua require('harpoon.ui').toggle_quick_menu()<cr>", "Toggle marks menu" },
+                h = { ":Telescope harpoon marks<cr>", "Find marks" },
+            }
         },
         l = { -- LSP
             name = "LSP",

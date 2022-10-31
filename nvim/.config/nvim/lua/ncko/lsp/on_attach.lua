@@ -1,17 +1,5 @@
 local whichkey = require("which-key")
 
-local servers = {
-    intelephense = {},
-    pyright = {},
-    tsserver = {},
-    tflint = {},
-    terraformls = {},
-    gopls = {},
-    sumneko_lua = {},
-    html = {},
-    jsonls = {}
-}
-
 local function keymappings(client, bufnr)
     local mappings = {
         l = {
@@ -66,16 +54,6 @@ function M.on_attach(client, bufnr)
 
     -- Configure key mappings
     keymappings(client, bufnr)
-
-    -- vim.notify(vim.inspect(client.server_capabilities))
-end
-
-require("lspconfig").servers
-
-function M.setup()
-    for server_name, _ in pairs(servers) do
-
-    end
 end
 
 return M
