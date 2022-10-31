@@ -20,7 +20,6 @@ alias slg="< $HOME/.cache/ncko/saved_cmds grep"
 
 alias tldrf='tldr --list | fzf --preview "tldr {1} --color=always" --preview-window=right,70% --layout reverse | xargs tldr'
 
-
 # key bindings
 bindkey -s ^f "tms\n"
 bindkey '^ ' autosuggest-accept
