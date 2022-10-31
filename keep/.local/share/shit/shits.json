@@ -28,5 +28,8 @@
   },
   "jq": {
     "concat strings": "cat whatever.json | jq '.[] | \"\\(.path.to.thing) \\(.anotherpath)\"'"
+  },
+  "cf": {
+    "tdd single method": "tdd --filter methodName path/to/file.php"
   }
 }
