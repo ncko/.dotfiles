@@ -38,7 +38,7 @@ fi
         #nvm use default
     #fi
 #}
-#add-zsh-hook chpwd load-nvmrc
+# add-zsh-hook chpwd load-nvmrc
 #load-nvmrc
 
 # vi mode
@@ -60,5 +60,31 @@ autoload bashcompinit && bashcompinit
 autoload -Uz compinit && compinit
 complete -C "$(which aws_completer)" aws
 
+export EDITOR=nvim
 
+# hacky fix to get skhd to work in the background
+# obviously it only works when you open terminal
+# 100% there is a better way to do this
+# https://github.com/koekeishiya/skhd/issues/216
+function remove_skhd_lock_file_on_end() {
+  local process_name="$(ps -p $SKHD_PID | tail -n 1 | awk '{print $4}')"
+
+  while [[ $process_name == "skhd" ]]; do
+    local process_name="$(ps -p $SKHD_PID | tail -n 1 | awk '{print $4}')"
+    sleep 1
+  done
+
+  rm /tmp/skhd.lock
+  rm /tmp/skhd_$(whoami).pid
+}
+
+
+if [ ! -f /tmp/skhd.lock ]; then
+  echo "skhd is not running. Starting skhd..."
+  echo "skhd is running" > /tmp/skhd.lock
+  skhd &!
+  SKHD_PID=$!
+
+  remove_skhd_lock_file_on_end &
+fi
 

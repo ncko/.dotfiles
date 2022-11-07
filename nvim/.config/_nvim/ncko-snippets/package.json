@@ -1,0 +1,12 @@
+{
+  "name": "ncko-snippets",
+  "contributes": {
+  "snippets": [
+      {
+        "language": "terraform",
+        "path": "./snippets/terraform.json"
+      }
+    ]
+  }
+}
+    
