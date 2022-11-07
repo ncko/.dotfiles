@@ -94,7 +94,30 @@ export EDITOR=vim
 
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
-#
 
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /opt/homebrew/bin/terraform terraform
+
+
+function remove_skhd_lock_file_on_end() {
+  local process_name="$(ps -p $SKHD_PID | tail -n 1 | awk '{print $4}')"
+
+  while [[ $process_name == "skhd" ]]; do
+    local process_name="$(ps -p $SKHD_PID | tail -n 1 | awk '{print $4}')"
+    sleep 1
+  done
+
+  rm /tmp/skhd.lock
+  rm /tmp/skhd_$(whoami).pid
+}
+
+
+if [ ! -f /tmp/skhd.lock ]; then
+  echo "skhd is not running. Starting skhd..."
+  echo "skhd is running" > /tmp/skhd.lock
+  skhd &!
+  SKHD_PID=$!
+
+  remove_skhd_lock_file_on_end &
+fi
+
