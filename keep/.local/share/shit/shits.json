@@ -24,7 +24,9 @@
     "get random string": "echo $RANDOM | md5sum | head -c 20; echo;",
     "get random string 2": "echo $RANDOM | base64 | head -c 20; echo;",
     "get random string 3": "openssl rand -hex 20 # or openssl rand -base64 20",
-    "getopts": "while getopts \"d:n:h\" option\n  do\n    case \"${option}\" in\n      d) somecommand \"${OPTARG}\";;\n      n)\n        somevar=\"${OPTARG}\"\n        othercommand $somevar\n        ;;\n      h) helpcommand && exit;;\n    esac\n  done\n\nhelp && exit 1"
+    "getopts": "while getopts \"d:n:h\" option\n  do\n    case \"${option}\" in\n      d) somecommand \"${OPTARG}\";;\n      n)\n        somevar=\"${OPTARG}\"\n        othercommand $somevar\n        ;;\n      h) helpcommand && exit;;\n    esac\n  done\n\nhelp && exit 1",
+    "display project structure": "tree -d -L 2 -h | less",
+    "generate a password": "LC_ALL=C tr -dc A-Za-z0-9 < /dev/urandom | head -c 16; echo"
   },
   "jq": {
     "concat strings": "cat whatever.json | jq '.[] | \"\\(.path.to.thing) \\(.anotherpath)\"'"
