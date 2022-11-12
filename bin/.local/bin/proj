@@ -16,7 +16,7 @@ function default() {
   dotfiles=`realpath ~/.dotfiles`
   deck_and_projects=`find ~/deck ~/projects/* -mindepth 1 -maxdepth 1 -type d`
   all_projects=`echo "$deck_and_projects\n$dotfiles"`
-  session=`printf "$all_projects" | fzf`
+  session=`printf "$all_projects" | fzf-tmux -p --reverse`
 
   open-session "$session"
   exit
