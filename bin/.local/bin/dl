@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+# download a youtube video with a timestamp
+
+function help() {
+  local bold=$(tput bold)
+  local normal=$(tput sgr0)
+
+  echo "${bold}USAGE${normal}"
+  echo "  dl -s <start_time> -d <duration> <url>"
+  echo ""
+  echo "${bold}FLAGS${normal}"
+  echo "  -s    start timestamp"
+  echo "  -d    duration"
+  echo "  -u    url of video"
+  echo "  -h    print this message"
+  echo ""
+  echo "${bold}EXAMPLES${normal}"
+  echo "To download a selection"
+  echo '  $ dl -s 11:32 -d 1:10 "https://www.youtube.com/watch?v=27D9CelRgSc"'
+  echo ""
+}
+
+function check_args() {
+  if [[ -z "${1}" ]]; then help && exit 1; fi
+  if [[ -z "${2}" ]]; then help && exit 1; fi
+  if [[ -z "${3}" ]]; then help && exit 1; fi
+}
+
+while getopts "s:d:u:h" option; do
+  case "${option}" in
+    h) help && exit;;
+    s)
+      start_time=${OPTARG}
+      ;;
+    d) 
+      duration=${OPTARG}
+      ;;
+    u)
+      url=${OPTARG}
+      ;;
+  esac
+done
+
+check_args $start_time $duration $url
+
+streams=$(youtube-dl --youtube-skip-dash-manifest -g $url)
+stream_1=$(echo "$streams" | head -n 1)
+stream_2=$(echo "$streams" | tail -n 1)
+
+ffmpeg -ss $start_time -i "$stream_1" -ss $start_time -i "$stream_2" -t $duration -map 0:v -map 1:a -c:v libx264 -c:a aac ~/Downloads/output.mkv
+
+ffmpeg -i ~/Downloads/output.mkv -codec copy ~/Downloads/output.mp4
+
