@@ -34,5 +34,8 @@
   },
   "cf": {
     "tdd single method": "tdd --filter methodName path/to/file.php"
+  },
+  "git": {
+    "update submodule": "git submodule update --remote"
   }
 }
