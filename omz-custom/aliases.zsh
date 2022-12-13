@@ -6,7 +6,7 @@ alias vimconfig="vim ~/.dotfiles/nvim/.config/nvim/lua/ncko"
 alias vimbin="vim ~/.dotfiles/bin/.local/bin"
 alias vimcfbin="vim ~/projects/ncko/crossfit/.local/bin"
 alias vimdot="vim ~/.dotfiles"
-alias commitrand='git commit -m "$(curl -sk http://whatthecommit.com/index.txt)"'
+alias commitrand='git commit -m "$(curl -sk http://whatthecommit.com)"'
 
 alias youtube-dl-best='youtube-dl -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio" '
 alias youtube-dl-480='youtube-dl -f "bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]" '
