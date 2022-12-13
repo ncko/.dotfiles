@@ -3,6 +3,7 @@
     "dynamodb: get an item": "aws dynamodb get-item --table-name=$(aws dynamodb list-tables | jq \".TableNames[]\" | tr -d \\\" | fzf) --key='{ \"path\": { \"S\": \"/hello\" } }'",
     "logs: get events by log group": "aws logs tail $(aws logs describe-log-groups | jq \".logGroups[].logGroupName\" | tr -d \\\" | fzf) --follow --format short",
     "s3: remove a bucket (force)": "aws s3 rb s3://$(aws s3 ls | awk '{print $3\" \"$1\" \"$2}' | fzf | awk '{print $1}') --force",
+    "s3: download something": "aws s3api get-object --bucket <bucket_name> --key <path_to_file> <local_name_of_file>",
     "route53: check domain available": "aws route53domains check-domain-availability --domain-name ncko.me",
     "route53: get domain suggestions": "aws route53domains get-domain-suggestions \\\n\t--suggestion-count 10 \\\n\t--only-available \\\n\t--domain-name ncko.com"
   },
