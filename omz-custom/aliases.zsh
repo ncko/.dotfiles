@@ -6,7 +6,7 @@ alias vimconfig="vim ~/.dotfiles/nvim/.config/nvim/lua/ncko"
 alias vimbin="vim ~/.dotfiles/bin/.local/bin"
 alias vimcfbin="vim ~/projects/ncko/crossfit/.local/bin"
 alias vimdot="vim ~/.dotfiles"
-alias commitrand='git commit -m "$(curl -sk http://whatthecommit.com/index.txt)"'
+alias commitrand='git commit -m "$(curl -sk http://whatthecommit.com)"'
 
 
 # save last command
