@@ -121,3 +121,5 @@ if [ ! -f /tmp/skhd.lock ]; then
   remove_skhd_lock_file_on_end &
 fi
 
+export VOLTA_HOME="$HOME/.volta"
+export PATH="$VOLTA_HOME/bin:$PATH"
