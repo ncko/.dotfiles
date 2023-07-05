@@ -7,7 +7,7 @@ function help() {
   local normal=$(tput sgr0)
 
   echo "${bold}USAGE${normal}"
-  echo "  dl -s <start_time> -d <duration> <url>"
+  echo "  youtube -s <start_time> -d <duration> -u <url>"
   echo ""
   echo "${bold}FLAGS${normal}"
   echo "  -s    start timestamp"
@@ -17,7 +17,7 @@ function help() {
   echo ""
   echo "${bold}EXAMPLES${normal}"
   echo "To download a selection"
-  echo '  $ dl -s 11:32 -d 1:10 "https://www.youtube.com/watch?v=27D9CelRgSc"'
+  echo '  $ youtube -s 11:32 -d 1:10 -u "https://www.youtube.com/watch?v=27D9CelRgSc"'
   echo ""
 }
 

@@ -73,6 +73,7 @@ ZSH_CUSTOM=~/.dotfiles/omz-custom
 plugins=(
   git
   vi-mode
+  gradle
 )
 
 source $ZSH/oh-my-zsh.sh
