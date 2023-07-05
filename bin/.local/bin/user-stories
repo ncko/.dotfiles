@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+import os
+
+os.system("clear")
+
+file_path = input("Path to stories csv (./stories.csv): ")
+file_path = "stories.csv" if file_path == "" else file_path
+
+print(f"Writing stories to {file_path}\n\n")
+
+try:
+    file = open(file_path, "w")
+
+    while True:
+        role = input("As a(n): ")
+        function = input("I want to: ")
+        outcome = input("So that: ")
+        os.system("clear")
+        file.write(f"As a(n) {role} I want to {function} so that {outcome}\n")
+except KeyboardInterrupt:
+        file.close()
+        os.system('clear')
+        print("g'bye")
