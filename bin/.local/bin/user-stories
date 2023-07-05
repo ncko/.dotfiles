@@ -6,10 +6,9 @@ os.system("clear")
 file_path = input("Path to stories csv (./stories.csv): ")
 file_path = "stories.csv" if file_path == "" else file_path
 
-print(f"Writing stories to {file_path}\n\n")
-
 try:
     file = open(file_path, "w")
+    print(f"Writing stories to {file_path}\n\n")
 
     while True:
         role = input("As a(n): ")
@@ -18,6 +17,9 @@ try:
         os.system("clear")
         file.write(f"As a(n) {role} I want to {function} so that {outcome}\n")
 except KeyboardInterrupt:
-        file.close()
-        os.system('clear')
-        print("g'bye")
+    file.close()
+    os.system('clear')
+    print("g'bye")
+except FileNotFoundError:
+    print(f"{file_path} is not a valid filename.")
+
