@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+
+from pathlib import Path
+from collections import defaultdict
+import yaml
+import shutil
+
+
+simple_vault = Path('/Users/ncko/Documents/simple')
+complex_vault_inbox = Path('/Users/ncko/Documents/complex/+ inbox/')
+already_copied = set()
+
+try:
+    with Path('/Users/ncko/Documents/complex/sources/copied.md').open() as file:
+        copied_files = [Path(line.strip()) for line in file.readlines()]
+        already_copied = set(copied_files)
+except Exception as err:
+    print("Unexpected err when reading complex/sourcs/copied.md")
+
+
+
+def is_target(path, text, already_copied):
+    try:
+        if text[0:4] == '---\n':
+            lines = text.split('\n')
+            yaml_end = lines.index('---', 1)
+            frontmatter = yaml.safe_load('\n'.join(lines[1:yaml_end]))
+            result = (frontmatter.get('vault') == 'complex') and (path not in already_copied)
+            return result
+    except Exception as err:
+        print(f"ERROR {path}")
+
+    return False
+
+
+def copy_target_to_vault(target, destination):
+    shutil.copy(target, destination)
+    already_copied.add(target)
+
+
+to_search = list(simple_vault.iterdir())
+searched = defaultdict(bool)
+
+while len(to_search) > 0:
+    path = to_search.pop()
+
+    if searched[path]:
+        to_search.pop()
+        continue
+
+    if path.is_file() and path.suffix == '.md':
+        try:
+            with path.open() as file:
+                result = is_target(path, file.read(), already_copied)
+                if result:
+                    print(f"copying {path}")
+                    copy_target_to_vault(path, complex_vault_inbox)
+        except Exception as err:
+            print(f"{path}: {str(err)}")
+    elif path.is_dir():
+        to_search.extend(list(path.iterdir()))
+
+    searched[path] = True
+
+
+
+
+
+#try:
+with Path('/Users/ncko/Documents/complex/sources/copied.md').open("w") as file:
+    new_contents = '\n'.join([str(path) for path in already_copied])
+    file.write(new_contents)
+#except Exception as err:
+    #print("Unexpected err when writing complex/sourcs/copied.md")
+
+
+
+
