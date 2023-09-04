@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+nodes_file="$HOME/.dotfiles/keep/.local/share/homelab/nodes"
+
+ssh root@$(cat $HOME/.dotfiles/keep/.local/share/homelab/nodes | fzf | awk '{print $2}')
+
