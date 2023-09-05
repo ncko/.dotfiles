@@ -38,5 +38,14 @@
   },
   "git": {
     "update submodule": "git submodule update --remote"
+  },
+  "networking": {
+    "ip of domain name": "nslookup ncko.me",
+    "the domain of an ip address": "host <ip>",
+    "arp entries": "arp -a",
+    "ip to mac address": "ping -c 1 <ip> && arp -a"
+  },
+  "homelab": {
+    "restart openvpn": "sudo openvpn --config <config> --daemon"
   }
 }
