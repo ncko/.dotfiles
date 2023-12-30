@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+function help() {
+  echo "${bold}USAGE${normal}"
+  echo "  note <command>"
+  echo ""
+  echo "${bold}COMMANDS${normal}"
+  echo "  search:    search notes"
+  echo "  move: move a note to notes2"
+  echo "  help:   show this message"
+  echo ""
+  echo "${bold}FLAGS${normal}"
+  echo "  --help, -h    show this message"
+  echo ""
+  echo "${bold}EXAMPLES${normal}"
+  echo "Search thang and simple for a note"
+  echo "  $ note search Blah\ Yes"
+  echo ""
+  echo "Move a note from search or thang to notes2"
+  echo "  $ note move"
+  echo ""
+}
+
+function search() {
+  simple_notes=$(fd -a $1 /Users/ncko/Documents/simple)
+  thang_notes=$(fd -a $1 /Users/ncko/Documents/thang)
+  printf "$simple_notes\n$thang_notes\n"
+}
+
+function move() {
+  simple_notes=$(fd -a . /Users/ncko/Documents/simple)
+  thang_notes=$(fd -a . /Users/ncko/Documents/thang)
+  result=$(echo "$simple_notes\n$thang_notes\n" | fzf)
+
+  if [ -z "$result" ]; then
+    echo "empty"
+  else
+    base_name=$(basename "$result")
+    echo $result
+    cp "$result" "/Users/ncko/Documents/notes2/+inbox/$base_name"
+  fi
+    
+}
+
+case $1 in
+  search) search $2;;
+  move) move $2;;
+  help) help;;
+  -h) help;;
+  --help) help;;
+  \?) help && exit 1;
+esac
+
