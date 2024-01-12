@@ -14,8 +14,9 @@ normal=$(tput sgr0)
 
 function default() {
   dotfiles=`realpath ~/.dotfiles`
+  nvim=`realpath ~/.config/nvim`
   deck_and_projects=`find ~/deck ~/projects/* -mindepth 1 -maxdepth 1 -type d`
-  all_projects=`echo "$deck_and_projects\n$dotfiles"`
+  all_projects=`echo "$deck_and_projects\n$nvim"`
   session=`printf "$all_projects" | fzf-tmux -p --reverse`
 
   open-session "$session"
