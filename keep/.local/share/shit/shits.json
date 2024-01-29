@@ -37,7 +37,8 @@
     "tdd single method": "tdd --filter methodName path/to/file.php"
   },
   "git": {
-    "update submodule": "git submodule update --remote"
+    "update submodule": "git submodule update --remote",
+    "list contributors": "git shortlog -sne --all"
   },
   "networking": {
     "ip of domain name": "nslookup ncko.me",
