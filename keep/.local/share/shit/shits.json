@@ -47,5 +47,8 @@
   },
   "homelab": {
     "restart openvpn": "sudo openvpn --config <config> --daemon"
+  },
+  "docker": {
+    "rm container": "docker container rm $(docker container ls -a --format '{{.Names}} {{.Image}} {{.Status}} {{.ID}}' | column -t | fzf --reverse | awk '{print $NF}')"
   }
 }
