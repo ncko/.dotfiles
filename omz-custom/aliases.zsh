@@ -14,6 +14,8 @@ alias slg="< $HOME/.cache/ncko/saved_cmds grep"
 
 alias tldrf='tldr --list | fzf --preview "tldr {1} --color=always" --preview-window=right,70% --layout reverse | xargs tldr'
 
+alias services-vm="clear && ssh -t services 'cd ~/projects/ncko/services ; zsh'"
+
 # key bindings
 bindkey -s ^f "tms\n"
 bindkey '^ ' autosuggest-accept
