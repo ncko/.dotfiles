@@ -25,3 +25,6 @@ bindkey '^ ' autosuggest-accept
 #alias cc="gcc-13"
 #alias g++="g++-13"
 #alias c++="c++-13"
+
+alias php7.2="docker run -it php:7.2-cli"
+alias php7.4="docker run -it php:7.4-cli"
