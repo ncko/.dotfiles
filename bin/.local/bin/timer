@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# requires termdown and sox
+# - pip install termdown
+# - brew install sox (or apt or whatever)
+
+# usage:
+# - timer 3s
+# - timer 1h
+# - timer 1h30m
+
+termdown $1 && play ~/.dotfiles/keep/alarm1.wav
