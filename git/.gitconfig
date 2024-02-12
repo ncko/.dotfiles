@@ -91,3 +91,5 @@
 	defaultBranch = main
 [submodule]
 	recurse = true
+[alias]
+	bb = !better-git-branch.sh
