@@ -13,6 +13,8 @@ if [[ $1 = "install" ]]; then
     STOW_FOLDERS=$STOW_FOLDERS DOTFILES=$DOTFILES $DOTFILES/install
 elif [[ $1 = "clean" ]]; then
     STOW_FOLDERS=$STOW_FOLDERS DOTFILES=$DOTFILES $DOTFILES/clean-env
+elif [[ $1 = "reinstall" ]]; then
+    STOW_FOLDERS=$STOW_FOLDERS DOTFILES=$DOTFILES $DOTFILES/clean-env && $DOTFILES/install
 else
     echo "must pass either 'install' or 'clean'"
 fi
