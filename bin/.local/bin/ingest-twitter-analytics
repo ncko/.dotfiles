@@ -1,0 +1,113 @@
+#!/usr/bin/env python
+
+import argparse
+import csv
+from pprint import pprint
+from datetime import date
+import os
+
+script_name = "ingest-twitter-analytics"
+description = "Tool for generating obsidian notes from twitter analytics csv files"
+notes_path = f"{os.environ['HOME']}/Documents/notes2/+inbox"
+
+note_template = """---
+tags: tweet
+url: {url}
+retweets: {retweets}
+replies: {replies}
+likes: {likes}
+impressions: {impressions}
+engagements: {engagements}
+---
+
+# {title}
+
+{url}
+
+```
+{tweet}
+```
+
+## Atoms
+- 
+
+## Topic
+- 
+
+
+"""
+
+
+def main(filename):
+    today = date.today().isocalendar()
+    year = today[0]
+    week = f"{today[1]:02d}"
+
+    try:
+        with open(filename) as file:
+            reader = csv.DictReader(file)
+            line_count = 0
+            for row in reader:
+                line_count += 1
+
+                if line_count == 0:
+                    continue
+
+                if line_count > 0:
+                    print(row['Tweet permalink'])
+                    new_filename = f"tweet-{year}{week}{line_count:02d}"
+                    text = generate_note_text(
+                        new_filename,
+                        row['Tweet text'],
+                        row['Tweet permalink'],
+                        row['retweets'],
+                        row['replies'],
+                        row['likes'],
+                        row['impressions'],
+                        row['engagements']
+                    )
+                    write_note(new_filename, text)
+
+            print(f'Processed {line_count} lines.')
+    except FileNotFoundError:
+        print(f"file \"{filename}\" not found")
+        return
+    except Exception as e:
+        print(f"Unexpected exception reading {filename}:\n\t{e}")
+        return
+
+
+def generate_note_text(title, tweet, url, retweets, replies, likes, impressions, engagements):
+    return note_template.format(
+        title=title,
+        tweet=tweet,
+        url=url,
+        retweets=retweets,
+        replies=replies,
+        likes=likes,
+        impressions=impressions,
+        engagements=engagements
+    )
+
+
+def write_note(title, text):
+    target_path = notes_path + f"/{title}.md"
+    try:
+        with open(target_path, "w") as file:
+            file.write(text)
+    except Exception as e:
+        print(f"Unexpected exception writing to {target_path}:\n\t{e}")
+
+
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        prog=script_name,
+        description=description
+    )
+
+    parser.add_argument('filename')
+    args = parser.parse_args()
+    main(filename=args.filename)
