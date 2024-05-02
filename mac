@@ -17,6 +17,6 @@ elif [[ $1 = "reinstall" ]]; then
     STOW_FOLDERS=$STOW_FOLDERS DOTFILES=$DOTFILES $DOTFILES/clean-env && \
         STOW_FOLDERS=$STOW_FOLDERS DOTFILES=$DOTFILES $DOTFILES/install
 else
-    echo "must pass either 'install' or 'clean'"
+    echo "subcommands: clean, install, reinstall"
 fi
     
