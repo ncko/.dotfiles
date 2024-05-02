@@ -30,3 +30,4 @@ bindkey '^ ' autosuggest-accept
 
 alias php7.2="docker run -it php:7.2-cli"
 alias php7.4="docker run -it php:7.4-cli"
+alias cfwebtest="docker run -it --mount type=bind,source=\"/Users/nick.olsen/projects/crossfit/cfweb\",target=/app cfweb vendor/bin/phpunit"
