@@ -51,5 +51,8 @@
   },
   "docker": {
     "rm container": "docker container rm $(docker container ls -a --format '{{.Names}} {{.Image}} {{.Status}} {{.ID}}' | column -t | fzf --reverse | awk '{print $NF}')"
+  },
+  "ssh": {
+    "upload file": "scp <user>@<ip>:<server_path> <local_path>"
   }
 }
