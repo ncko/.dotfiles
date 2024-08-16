@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+graveyard_path=~/projects/ncko/script-graveyard
+file_name=$(ls -1 $graveyard_path | fzf)
+cat $graveyard_path/$file_name
