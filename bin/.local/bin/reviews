@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+gh search prs --review-requested ncko \
+	--state open \
+	--json number,author,title,repository,updatedAt,url \
+	--jq '.[] | [.updatedAt, .author.login, .number, .repository.nameWithOwner, .title] | join("\t")' | fzf --reverse
