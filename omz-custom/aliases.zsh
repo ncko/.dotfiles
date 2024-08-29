@@ -36,3 +36,15 @@ alias poe="poetry poe"
 
 alias vsp="tmux split-window -h && tmux resize-pane -L 85 && tmux split-window -h && tmux resize-pane -R 50"
 alias vsd="tmux split-window -v && tmux resize-pane -D 15"
+
+
+aws-profile() {
+
+    if [[ $# -gt 0 ]]; then
+        export AWS_PROFILE=$1
+    else
+        unset AWS_PROFILE
+    fi
+
+    source ~/.zshrc
+}

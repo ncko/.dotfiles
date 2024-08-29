@@ -92,7 +92,7 @@ source $ZSH/oh-my-zsh.sh
 # else
 #   export EDITOR='mvim'
 # fi
-export EDITOR=vim
+export EDITOR=nvim
 
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
@@ -100,6 +100,16 @@ export EDITOR=vim
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /opt/homebrew/bin/terraform terraform
 
-
 export VOLTA_HOME="$HOME/.volta"
 export PATH="$VOLTA_HOME/bin:$PATH"
+
+aws_profile_prompt() {
+  if [ -n "${AWS_PROFILE+1}" ]; then
+    echo "aws:$AWS_PROFILE"
+  else
+    echo ""
+  fi
+}
+
+PROMPT="╭─$(aws_profile_prompt) ${user_host}${current_dir}${rvm_ruby}${vcs_branch}${venv_prompt}
+╰─%B${user_symbol}%b "
