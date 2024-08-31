@@ -35,7 +35,7 @@
   },
   "cf": {
     "tdd single method": "tdd --filter methodName path/to/file.php",
-    "text after build": "curl -X POST https://textbelt.com/text \\\n     --data-urlencode phone='9517225905' \\\n     --data-urlencode message='build done' \\\n     -d key=cb7bef93b450f3ada93e93072e894074c4b693abyK5pT9EYVUoJisHylDqthtjek"
+    "": "null"
   },
   "git": {
     "update submodule": "git submodule update --remote",
