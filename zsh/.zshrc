@@ -113,3 +113,5 @@ aws_profile_prompt() {
 
 PROMPT="╭─$(aws_profile_prompt) ${user_host}${current_dir}${rvm_ruby}${vcs_branch}${venv_prompt}
 ╰─%B${user_symbol}%b "
+
+source <(fzf --zsh)
