@@ -1,0 +1,337 @@
+#!/usr/bin/env bash
+
+# TODO: in repo_add and author_add, we need to update the prexisting list of PRs when a new repo or author is added
+# TODO: add a function to check for /tmp/pr-reviews.lock that can be used in cronjob
+#
+# This works nicely with a cronjob. Here is how to configure a crontab for this:
+#
+# $> crontab -l # to print the current crontab file
+# $> crontab -e # to edit the current crontab file
+#
+# Crontab for this command would be something like this:
+#
+# PATH=<someplace this script lives>
+# TEXTBELT_PHONE=<your phone number>
+# TEXTBELT_KEY=<key>
+#
+# */20 * * * * reviews check >> /var/log/reviews.log 2>&1
+#
+
+
+function help() {
+  bold=$(tput bold)
+  normal=$(tput sgr0)
+
+  echo ""
+  echo "Manage notifications of PRs on selected repos and by selected authors."
+  echo "This requires a subscription to textbelt.com and the following"
+  echo "environment variables: TEXTBELT_PHONE and TEXTBELT_KEY"
+  echo ""
+  echo "${bold}USAGE${normal}"
+  echo "  $1 [subcommand]"
+  echo ""
+  echo ""
+  echo "${bold}SUBCOMMANDS${normal}"
+  echo "  repos	{view,add,remove}		manage the repo watchlist"
+  echo "  authors {view,add,remove}		manage the author watchlist"
+  echo "  q {clear,view}			manage the pr queue"
+  echo "  init					record initial PRs"
+  echo "  check					check for new PRs"
+  echo "  start					start notifications"
+  echo "  stop					stop notifications"
+  echo "  file {q,prs,repos,authors,log}	open a file in nvim"
+  echo "  status				Check running status"
+  echo ""
+  echo "${bold}EXAMPLES${normal}"
+  echo "Add a repo to the repo watchlist by passing the owner of the repo"
+  echo "  $ $1 repos add ncko"
+  echo ""
+  echo "Remove a repo"
+  echo "  $ $1 repos remove ncko/.dotfiles"
+  echo ""
+  echo "View the repo watchlist"
+  echo "  $ $1 repos view"
+  echo ""
+  echo "Add an author to the author watchlist using their github login"
+  echo "  $ $1 authors add elog08"
+  echo ""
+  echo "Remove an author from the author watchlist"
+  echo "  $ $1 authors remove elog08"
+  echo ""
+  echo "View the author watch list"
+  echo "  $ $1 authors view"
+  echo ""
+  echo "Initialize the list of PRs so you're not notified of existing PRs"
+  echo "  $ $1 init"
+  echo ""
+  exit
+}
+
+function queue() {
+	cmd=$2
+
+	case $cmd in
+		clear)
+			rm "$HOME/.local/share/prs/queue"
+			touch "$HOME/.local/share/prs/queue"
+			;;
+		view)
+			cat "$HOME/.local/share/prs/queue"
+			;;
+		*)
+			help $0
+			;;
+	esac
+}
+
+function file() {
+	file=$2
+
+	case $file in
+		q)
+			nvim "$HOME/.local/share/prs/queue"
+			;;
+		queue)
+			nvim "$HOME/.local/share/prs/queue"
+			;;
+		prs)
+			nvim "$HOME/.local/share/prs/prs"
+			;;
+		repos)
+			nvim "$HOME/.local/share/prs/repos"
+			;;
+		authors)
+			nvim "$HOME/.local/share/prs/authors"
+			;;
+		logs)
+			nvim /tmp/reviews.log
+			;;
+		*)
+			help $0
+			;;
+	esac
+}
+
+function authors () {
+	cmd=$2
+
+	case $cmd in 
+		add)
+			author_add $3
+			;;
+		remove)
+			author_remove
+			;;
+		view)
+			touch ~/.local/share/prs/authors
+			cat ~/.local/share/prs/authors
+			;;
+		*)
+			help $0
+			;;
+	esac
+}
+
+function author_remove() {
+	target=$(cat ~/.local/share/prs/authors | fzf --tmux --reverse)
+	new_file=$(mktemp)
+	cat ~/.local/share/prs/authors | sed "s|$target||g; /^\s*$/d" > $new_file
+	cat $new_file > ~/.local/share/prs/authors
+	rm $new_file
+}
+
+function author_add() {
+	local login=$1
+	if [ -z "$login" ]; then
+		help $0
+	fi
+
+	new_file=$(mktemp)
+	old_file=$(mktemp)
+	touch ~/.local/share/prs/authors
+	cat ~/.local/share/prs/authors > $old_file
+	echo $login >> $new_file
+	cat $new_file $old_file | sort | uniq > ~/.local/share/prs/authors
+	rm $new_file $old_file
+}
+
+function repos () {
+	cmd=$2
+	
+	case $cmd in 
+		add)
+			repo_add $3
+			;;
+		remove)
+			repo_remove
+			;;
+		view)
+			touch ~/.local/share/prs/repos
+			cat ~/.local/share/prs/repos
+			;;
+		*)
+			help $0
+			;;
+	esac
+}
+
+function repo_remove() {
+	target=$(cat ~/.local/share/prs/repos | fzf --tmux --reverse)
+	new_file=$(mktemp)
+	cat ~/.local/share/prs/repos | sed "s|$target||g; /^\s*$/d" > $new_file
+	cat $new_file > ~/.local/share/prs/repos
+	rm $new_file
+}
+
+function repo_add() {
+	if [ -z "$1" ]; then
+		help $@
+	fi
+
+	new_repos=$(mktemp) 
+	old_repos=$(mktemp)
+
+	touch ~/.local/share/prs/repos
+	cat ~/.local/share/prs/repos > $old_repos
+
+	gh search repos \
+		--owner $1 \
+		--json fullName \
+		--limit 200 | jq -r '.[].fullName' | sort | fzf --tmux --reverse -m > $new_repos
+
+	# remove duplicates
+	cat $new_repos $old_repos | sort | uniq > ~/.local/share/prs/repos
+
+	rm $new_repos $old_repos
+}
+
+function pr_commits() {
+	local repo=$1
+	local number=$2
+
+	if [ -z "$repo" ] || [ -z "$number" ]; then
+		echo "Need to pass a repo or PR number. Received (repo:$repo) and (number:$number)"
+		return 1
+	fi
+
+	commits_file=$(mktemp)
+	parent_file=$(mktemp)
+
+	gh pr view $number --repo $repo --json commits | jq -r ".commits[].oid" > $commits_file
+	git log --pretty=%P -n 1 $(head -n 1 $commits_file) > $parent_file
+	cat $parent_file $commits_file > ./.commits
+
+	rm $commits_file
+	rm $parent_file
+}
+
+# Add existing PRs to the current list so we don't get notified of pre-existing PRs
+function init() {
+	output=$(mktemp)
+	touch ~/.local/share/prs/prs
+	
+	while read line
+	do
+		eval gh search prs --state open $(awk '{print "--repo "$1}' ~/.local/share/prs/repos) --author $line --json author,repository,number | jq -r '.[] | .author.login + " " + .repository.nameWithOwner + " " + (.number|tostring)' >> $output
+	done < "$HOME/.local/share/prs/authors" # iterate through list of authors
+
+	cat $output | sort | uniq > ~/.local/share/prs/prs
+
+	rm $output
+}
+
+# check for new PRs
+function check() {
+	incoming_prs=$(mktemp)
+	saved_prs=$(mktemp)
+	new_prs=$(mktemp)
+
+	cat ~/.local/share/prs/prs > $saved_prs
+
+	while read line
+	do
+		eval gh search prs --state open $(awk '{print "--repo "$1}' ~/.local/share/prs/repos) --author $line --json author,repository,number | jq -r '.[] | .author.login + " " + .repository.nameWithOwner + " " + (.number|tostring)' >> $incoming_prs
+	done < "$HOME/.local/share/prs/authors" # iterate through list of authors
+
+	while read pr_line
+	do
+		if ! grep -q "$pr_line" "$HOME/.local/share/prs/prs"; then
+			# this is a new PR, just print it for now
+			echo $pr_line >> $HOME/.local/share/prs/queue
+			echo $pr_line >> $new_prs
+		fi
+	done < $incoming_prs
+
+	if [ -s $new_prs ]; then # new PRs!
+		curl -s -X POST https://textbelt.com/text \
+			--data-urlencode phone=$TEXTBELT_PHONE \
+			--data-urlencode message='New PRs!' \
+			-d key=$TEXTBELT_KEY; echo;
+
+		log "new PRs found: $(wc -l $new_prs)"
+
+		cat $new_prs $saved_prs | sort | uniq > ~/.local/share/prs/prs
+	else
+		log "no new prs"
+	
+	fi
+
+	rm $incoming_prs $saved_prs $new_prs
+}
+
+function log() {
+	echo $(date +"%T") " - $1"
+}
+
+function croncheck() {
+	if [ -f "/tmp/pr-reviews.lock" ]; then
+		log "Running check"
+		check
+	else
+		log "Skipping check"
+	fi
+}
+
+case $1 in 
+	repos)
+		repos $@
+		;;
+	authors)
+		authors $@
+		;;
+	q)
+		queue $@
+		;;
+	queue)
+		queue $@
+		;;
+	init)
+		init
+		;;
+	check)
+		check
+		;;
+	croncheck)
+		croncheck
+		;;
+	start)
+		echo "If this file exists then PRs are being monitored. Run the 'reviews' command to learn more." >> /tmp/pr-reviews.lock
+		;;
+	stop)
+		rm /tmp/pr-reviews.lock
+		;;
+	status)
+		if [ -f "/tmp/pr-reviews.lock" ]; then
+			echo "Running"
+		else
+			echo "Not Running"
+		fi
+		;;
+	file)
+		file $@
+		;;
+	*)
+		help $0
+		;;
+esac
+
