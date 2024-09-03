@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # TODO: in repo_add and author_add, we need to update the prexisting list of PRs when a new repo or author is added
-# TODO: add a function to check for /tmp/pr-reviews.lock that can be used in cronjob
+# TODO: Dry it up a little (a little)
 #
 # This works nicely with a cronjob. Here is how to configure a crontab for this:
 #
@@ -39,7 +39,7 @@ function help() {
   echo "  check					check for new PRs"
   echo "  start					start notifications"
   echo "  stop					stop notifications"
-  echo "  file {q,prs,repos,authors,log}	open a file in nvim"
+  echo "  file {q,prs,repos,authors,log}	echo path files managed by reviews"
   echo "  status				Check running status"
   echo ""
   echo "${bold}EXAMPLES${normal}"
@@ -89,25 +89,29 @@ function file() {
 
 	case $file in
 		q)
-			nvim "$HOME/.local/share/prs/queue"
+			echo "$HOME/.local/share/prs/queue"
 			;;
 		queue)
-			nvim "$HOME/.local/share/prs/queue"
+			echo "$HOME/.local/share/prs/queue"
 			;;
 		prs)
-			nvim "$HOME/.local/share/prs/prs"
+			echo "$HOME/.local/share/prs/prs"
 			;;
 		repos)
-			nvim "$HOME/.local/share/prs/repos"
+			echo "$HOME/.local/share/prs/repos"
 			;;
 		authors)
-			nvim "$HOME/.local/share/prs/authors"
+			echo "$HOME/.local/share/prs/authors"
 			;;
 		logs)
-			nvim /tmp/reviews.log
+			echo "/tmp/reviews.log"
 			;;
 		*)
-			help $0
+			echo -e "queue:\t\t$HOME/.local/share/prs/queue"
+			echo -e "prs:\t\t$HOME/.local/share/prs/prs"
+			echo -e "repos:\t\t$HOME/.local/share/prs/repos"
+			echo -e "authors:\t$HOME/.local/share/prs/authors"
+			echo -e "logs:\t\t/tmp/reviews.log"
 			;;
 	esac
 }
@@ -227,8 +231,12 @@ function pr_commits() {
 
 # Add existing PRs to the current list so we don't get notified of pre-existing PRs
 function init() {
+	mkdir -p ~/.local/share/prs
+	touch ~/.local/share/prs/authors
+	touch ~/.local/share/prs/repos
+	touch ~/.local/share/prs/queue
+
 	output=$(mktemp)
-	touch ~/.local/share/prs/prs
 	
 	while read line
 	do
