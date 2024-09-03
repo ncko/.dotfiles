@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+# open a session for PRs
+repo=$1
+pr_number=$2
+in_tmux_session=$TMUX
+tmux_running=$(pgrep tmux)
+
+# is there a git repository in the right location?
+if [ ! -d "~/reviews/$repo/.git" ]; then
+	git clone --recurse-submodules gh:"$repo" "$HOME/reviews/$repo"
+fi
+
+# if not in tmux session and tmux is not running
+if [[ -z $in_tmux_session ]] && [[ -z $tmux_running ]]; then
+	tmux new-session -s "reviews" -c "$HOME/reviews/$repo" -d # -d because we don't want to attach yet
+	tmux send-keys -t "reviews" "cd $HOME/reviews/$repo" ENTER "gh pr checkout $pr_number" ENTER
+	tmux attach-session -t "reviews"
+	exit 0
+fi
+
+# if tmux does not have a session with the name $session_name
+if ! tmux has-session -t "reviews/$repo" 2> /dev/null; then
+    tmux new-session -s "reviews" -c "$HOME/reviews/$repo" -d
+fi
+
+# if not in tmux session and tmux is running
+tmux send-keys -t "reviews" "cd $HOME/reviews/$repo" ENTER "gh pr checkout $pr_number" ENTER
+if [[ -z $in_tmux_session ]]; then
+	tmux attach-session -t "reviews" -c "$HOME/reviews/$repo"
+else
+	tmux switch-client -t "reviews"
+fi
