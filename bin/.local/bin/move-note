@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+
+# TODO: update the move command so it grabs a specific vault
+
+if [ $1 != "work" ] && [ $1 != "private" ]; then
+	echo "invalid target vault $1"
+	exit
+fi
+
+vaults_path="$HOME/Documents"
+notes_path="$HOME/projects/ncko/notes"
+#selection="$(fd . ~/projects/ncko/notes | sed "s/^\/Users\/ncko\/projects\/ncko\/notes\///g" | fzf --reverse --tmux)"
+#target="$notes_path/$selection"
+
+function move() {
+	vault="$1"
+	target_path="$2"
+
+	case $vault in
+		private)
+			target_inbox="$vaults_path/Private Notes/00-09 System management/01 Inbox"
+			;;
+		work)
+			target_inbox="$vaults_path/Work Notes/00-09 System management/01 Inbox"
+			;;
+		*)
+			echo "invalid vault $vault"
+			exit
+			;;
+	esac
+
+	basename=$(basename -a "$target_path")
+	mv "$target_path" "$target_inbox/$basename"
+}
+
+function move_attachment() {
+	vault="$1"
+	target_path="$2"
+	notes_path="$HOME/projects/ncko/notes"
+	vaults_path="$HOME/Documents"
+
+	case $vault in
+		private)
+			target_inbox="$vaults_path/Private Notes/00-09 System management/07 Static/07.01 Attachments"
+			;;
+		work)
+			target_inbox="$vaults_path/Work Notes/00-09 System management/07 Static/07.01 Attachments"
+			;;
+		*)
+			echo "invalid vault $vault"
+			exit
+			;;
+	esac
+
+	#echo $(fd "$target_path" "$notes_path")
+	#echo $(fd "$target_path" "$notes_path") "$target_inbox/$basename"
+
+	basename=$(basename -a "$target_path")
+	final_target_path=$(fd "$target_path" "$notes_path")
+
+	mv "$final_target_path" "$target_inbox/$basename"
+}
+
+# export the function so we can use it with xargs
+export -f move_attachment
+
+cd "$notes_path" && git pull 
+
+selection="$(fd . "$HOME/projects/ncko/notes" | sed "s/^\/Users\/ncko\/projects\/ncko\/notes\///g" | fzf --reverse --tmux)"
+target="$notes_path/$selection"
+
+if [[ "$(basename $target)" != "notes" ]]; then
+	# move images referenced within each file or folder
+	tmpfile=$(mktemp)
+	rg --no-filename --no-line-number "\!\[\[.*\]\]" "$target" | sed "s/^\!\[\[//g;s/\]\]$//g" | xargs -I {} echo {} >> $tmpfile
+
+	if [ $1 == "private" ]; then
+		cat $tmpfile | xargs -I {} bash -c 'move_attachment private "{}"'
+	elif [ $1 == "work" ]; then
+		cat $tmpfile | xargs -I {} bash -c 'move_attachment work "{}"'
+	fi
+	rm $tmpfile
+
+	# move the file/folder
+	if [ $1 == "private" ]; then
+		move private "$target"
+	elif [ $1 == "work" ]; then
+		move work "$target"
+	fi
+
+	echo "Committing changes..."
+	cd "$notes_path" && git add . && git commit -m "$selection" && git push
+	echo "committed"
+fi
