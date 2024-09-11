@@ -18,10 +18,10 @@ function move() {
 
 	case $vault in
 		private)
-			target_inbox="$vaults_path/Private Notes/00-09 System management/01 Inbox"
+			target_inbox="$vaults_path/Private Notes/00 Meta/01 Inbox"
 			;;
 		work)
-			target_inbox="$vaults_path/Work Notes/00-09 System management/01 Inbox"
+			target_inbox="$vaults_path/CrossFit Notes/00 Meta/01 Inbox"
 			;;
 		*)
 			echo "invalid vault $vault"
@@ -41,10 +41,10 @@ function move_attachment() {
 
 	case $vault in
 		private)
-			target_inbox="$vaults_path/Private Notes/00-09 System management/07 Static/07.01 Attachments"
+			target_inbox="$vaults_path/Private Notes/00 Meta/07 Static/07.01 Attachments"
 			;;
 		work)
-			target_inbox="$vaults_path/Work Notes/00-09 System management/07 Static/07.01 Attachments"
+			target_inbox="$vaults_path/CrossFit Notes/00 Meta/07 Static/07.01 Attachments"
 			;;
 		*)
 			echo "invalid vault $vault"
