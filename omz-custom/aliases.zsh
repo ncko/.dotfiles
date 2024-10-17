@@ -34,7 +34,8 @@ alias cfwebtest="docker run -it --mount type=bind,source=\"/Users/nick.olsen/pro
 
 alias poe="poetry poe"
 
-alias vsp="tmux split-window -h && tmux resize-pane -L 85 && tmux split-window -h && tmux resize-pane -R 50"
+alias vsp="tmux split-window -h && tmux resize-pane -L 25" # [v]ertical [sp]lit
+alias vspw="tmux split-window -h && tmux resize-pane -L 85" # [v]ertical [sp]lit for [w]ide monitor
 alias vsd="tmux split-window -v && tmux resize-pane -D 15"
 
 
