@@ -2,7 +2,7 @@
 
 # TODO: update the move command so it grabs a specific vault
 
-if [ $1 != "work" ] && [ $1 != "private" ]; then
+if [ $1 != "work" ] && [ $1 != "personal" ]; then
 	echo "invalid target vault $1"
 	exit
 fi
@@ -17,8 +17,8 @@ function move() {
 	target_path="$2"
 
 	case $vault in
-		private)
-			target_inbox="$vaults_path/Private Notes/00 Meta/01 Inbox"
+		personal)
+			target_inbox="$vaults_path/Personal Notes/+ Inbox"
 			;;
 		work)
 			target_inbox="$vaults_path/CrossFit Notes/00 Meta/01 Inbox"
@@ -40,8 +40,8 @@ function move_attachment() {
 	vaults_path="$HOME/Documents"
 
 	case $vault in
-		private)
-			target_inbox="$vaults_path/Private Notes/00 Meta/07 Static/07.01 Attachments"
+		personal)
+			target_inbox="$vaults_path/Personal Notes/Extras/Attachments"
 			;;
 		work)
 			target_inbox="$vaults_path/CrossFit Notes/00 Meta/07 Static/07.01 Attachments"
@@ -74,16 +74,16 @@ if [[ "$(basename $target)" != "notes" ]]; then
 	tmpfile=$(mktemp)
 	rg --no-filename --no-line-number "\!\[\[.*\]\]" "$target" | sed "s/^\!\[\[//g;s/\]\]$//g" | xargs -I {} echo {} >> $tmpfile
 
-	if [ $1 == "private" ]; then
-		cat $tmpfile | xargs -I {} bash -c 'move_attachment private "{}"'
+	if [ $1 == "personal" ]; then
+		cat $tmpfile | xargs -I {} bash -c 'move_attachment personal "{}"'
 	elif [ $1 == "work" ]; then
 		cat $tmpfile | xargs -I {} bash -c 'move_attachment work "{}"'
 	fi
 	rm $tmpfile
 
 	# move the file/folder
-	if [ $1 == "private" ]; then
-		move private "$target"
+	if [ $1 == "personal" ]; then
+		move personal "$target"
 	elif [ $1 == "work" ]; then
 		move work "$target"
 	fi
