@@ -2,3 +2,9 @@
 .idea/
 .phpactor.json
 ncko/
+.env
+tools/auth0/__pycache__/
+tools/auth0/data/
+tools/auth0/env/
+tools/auth0/experiments/
+
