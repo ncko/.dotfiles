@@ -37,6 +37,7 @@ alias poe="poetry poe"
 alias vsp="tmux split-window -h && tmux resize-pane -L 25" # [v]ertical [sp]lit
 alias vspw="tmux split-window -h && tmux resize-pane -L 85" # [v]ertical [sp]lit for [w]ide monitor
 alias vsd="tmux split-window -v && tmux resize-pane -D 15"
+alias tree="tree --dirsfirst"
 
 
 aws-profile() {
