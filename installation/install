@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+if [ "$1" = "mac" ]; then
+    source mac/neovim
+else
+    echo "Please specify the installation environment. Current options: mac"
+    exit 1
+fi
+
+# TODO - install homebrew and global prereqs
+# TODO - upgrade neovim
+# neovimPrereqs
+
+neovimInstall

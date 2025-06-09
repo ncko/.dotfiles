@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+function neovimPrereqs() {
+    xcode-select --install
+    brew install ninja cmake gettext curl
+    git clone https://github.com/neovim/neovim $HOME/projects/neovim/neovim
+}
+
+function neovimInstall() {
+    cd $HOME/projects/neovim/neovim
+    git checkout stable && git pull
+    make CMAKE_BUILD_TYPE=RelWithDebInfo
+    sudo make install
+}
