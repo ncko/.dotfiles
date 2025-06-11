@@ -7,6 +7,12 @@ else
     exit 1
 fi
 
+
+# install software
+# upgrade software
+# remove software
+# prune
+
 # TODO - install homebrew and global prereqs
 # TODO - upgrade neovim
 # neovimPrereqs
