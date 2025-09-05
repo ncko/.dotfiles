@@ -100,9 +100,6 @@ export EDITOR=nvim
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /opt/homebrew/bin/terraform terraform
 
-export VOLTA_HOME="$HOME/.volta"
-export PATH="$VOLTA_HOME/bin:$PATH"
-
 aws_profile_prompt() {
   if [ -n "${AWS_PROFILE+1}" ]; then
     echo "aws:$AWS_PROFILE"
