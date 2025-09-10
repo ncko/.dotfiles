@@ -38,6 +38,7 @@ alias vsp="tmux split-window -h && tmux resize-pane -L 25" # [v]ertical [sp]lit
 alias vspw="tmux split-window -h && tmux resize-pane -L 85" # [v]ertical [sp]lit for [w]ide monitor
 alias vsd="tmux split-window -v && tmux resize-pane -D 15"
 alias tree="tree --dirsfirst"
+alias amend="git add .;git commit --amend --no-edit"
 
 
 aws-profile() {
