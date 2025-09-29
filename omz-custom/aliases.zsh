@@ -7,6 +7,7 @@ alias vimbin="vim ~/.dotfiles/bin/.local/bin"
 alias vimcfbin="vim ~/projects/ncko/crossfit/.local/bin"
 alias vimdot="vim ~/.dotfiles"
 alias o="nvim \$(fd --exclude .git -H . | fzf --reverse --preview 'bat --color=always {}')"
+alias be="bundle exec"
 
 # save last command
 alias slc="fc -ln -1 | sed 's/^\*//' >> $HOME/.cache/ncko/saved_cmds"
