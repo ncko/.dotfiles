@@ -51,3 +51,4 @@ aws-profile() {
 
     source ~/.zshrc
 }
+

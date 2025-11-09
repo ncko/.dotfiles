@@ -1,13 +1,15 @@
-export PATH=$HOME/Library/Python/3.9/bin:$PATH
+#export PATH=$HOME/Library/Python/3.9/bin:$PATH
 export PATH=/opt/homebrew/bin:$PATH
+export PATH=/opt/homebrew/sbin:$PATH
 export PATH=$PATH:/Users/ncko/.cargo/bin
 export PATH=/opt/homebrew/opt/sqlite/bin:$PATH
 export PATH=/opt/homebrew/opt/libpq/bin:$PATH
 
 # Created by `pipx` on 2021-10-11 05:20:52
-export PATH="$PATH:/Users/$USER/.local/bin"
+export PATH="/Users/$USER/.local/bin:$PATH"
 export PATH=$PATH:$GEM_HOME/bin
 export PATH=$PATH:$HOME/go/bin
+export PATH="/opt/homebrew/opt/mysql@8.0/bin:$PATH"
 
 
 
