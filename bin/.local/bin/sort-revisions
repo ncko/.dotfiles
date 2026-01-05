@@ -1,0 +1,35 @@
+#!/usr/bin/env python
+import re
+import subprocess
+
+# Run git grep to get revision info
+result = subprocess.run(
+    ['git', 'grep', 'down_revision', '--', 'alembic/versions/'],
+    capture_output=True,
+    text=True
+)
+lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+# Parse each line: extract filename prefix (revision id) and down_revision
+revisions = {}
+for line in lines:
+    filename = line.split(':')[0].split('/')[-1]  # e.g., "c6ee712ee754_initial.py"
+    rev_id = filename.split('_')[0]  # e.g., "c6ee712ee754"
+
+    match = re.search(r"down_revision\s*=\s*['\"]?(\w+|None)['\"]?", line)
+    down_rev = match.group(1) if match else None
+    if down_rev == 'None':
+        down_rev = None
+
+    revisions[rev_id] = {'line': line, 'down': down_rev}
+
+# Build forward map: which revision comes after each?
+forward = {None: None}
+for rev_id, data in revisions.items():
+    forward[data['down']] = rev_id
+
+# Walk the chain from root (None) to end
+current = forward[None]
+while current:
+    print(revisions[current]['line'])
+    current = forward.get(current)
