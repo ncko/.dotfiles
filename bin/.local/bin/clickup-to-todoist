@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+"""
+Sync ClickUp tasks with 'breakdown' status to Todoist.
+Creates tasks with today's due date under matching projects.
+"""
+
+import os
+import sys
+import requests
+from datetime import date
+
+CLICKUP_API_KEY = os.environ.get("CLICKUP_API_KEY")
+TODOIST_API_KEY = os.environ.get("TODOIST_API_KEY")
+
+CLICKUP_BASE = "https://api.clickup.com/api/v2"
+TODOIST_BASE = "https://api.todoist.com/rest/v2"
+
+
+def clickup_get(endpoint):
+    """Make GET request to ClickUp API."""
+    resp = requests.get(
+        f"{CLICKUP_BASE}{endpoint}",
+        headers={"Authorization": CLICKUP_API_KEY}
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
+def todoist_get(endpoint):
+    """Make GET request to Todoist API."""
+    resp = requests.get(
+        f"{TODOIST_BASE}{endpoint}",
+        headers={"Authorization": f"Bearer {TODOIST_API_KEY}"}
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
+def todoist_post(endpoint, data):
+    """Make POST request to Todoist API."""
+    resp = requests.post(
+        f"{TODOIST_BASE}{endpoint}",
+        headers={"Authorization": f"Bearer {TODOIST_API_KEY}"},
+        json=data
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
+def get_clickup_teams():
+    """Get all ClickUp teams/workspaces."""
+    return clickup_get("/team")["teams"]
+
+
+def get_clickup_spaces(team_id):
+    """Get all spaces in a team."""
+    return clickup_get(f"/team/{team_id}/space")["spaces"]
+
+
+def get_clickup_folders(space_id):
+    """Get all folders in a space."""
+    return clickup_get(f"/space/{space_id}/folder")["folders"]
+
+
+def get_clickup_lists(folder_id):
+    """Get all lists in a folder."""
+    return clickup_get(f"/folder/{folder_id}/list")["lists"]
+
+
+def get_folderless_lists(space_id):
+    """Get lists not in any folder."""
+    return clickup_get(f"/space/{space_id}/list")["lists"]
+
+
+def get_tasks_by_status(list_id, status="breakdown"):
+    """Get tasks from a list with specific status."""
+    tasks = clickup_get(f"/list/{list_id}/task?statuses[]={status}")
+    return tasks.get("tasks", [])
+
+
+def get_todoist_projects():
+    """Get all Todoist projects."""
+    return todoist_get("/projects")
+
+
+def find_or_create_parent_project(projects):
+    """Find or create 'Active Projects' parent project."""
+    for project in projects:
+        if project["name"] == "Active Projects":
+            return project["id"]
+
+    # Create if not exists
+    new_project = todoist_post("/projects", {"name": "Active Projects"})
+    return new_project["id"]
+
+
+def find_or_create_project(projects, name, parent_id):
+    """Find or create a project under the parent."""
+    for project in projects:
+        if project["name"] == name and project.get("parent_id") == parent_id:
+            return project["id"]
+
+    # Create new project
+    new_project = todoist_post("/projects", {
+        "name": name,
+        "parent_id": parent_id
+    })
+    print(f"Created Todoist project: {name}")
+    return new_project["id"]
+
+
+def create_todoist_task(content, project_id, description=""):
+    """Create a task in Todoist with today's due date."""
+    task_data = {
+        "content": content,
+        "project_id": project_id,
+        "due_date": date.today().isoformat()
+    }
+    if description:
+        task_data["description"] = description
+
+    return todoist_post("/tasks", task_data)
+
+
+def main():
+    if not CLICKUP_API_KEY:
+        print("Error: CLICKUP_API_KEY environment variable not set")
+        sys.exit(1)
+    if not TODOIST_API_KEY:
+        print("Error: TODOIST_API_KEY environment variable not set")
+        sys.exit(1)
+
+    # Get Todoist projects and find/create parent
+    todoist_projects = get_todoist_projects()
+    parent_id = find_or_create_parent_project(todoist_projects)
+
+    # Cache for list_id -> todoist_project_id mapping
+    project_cache = {}
+
+    tasks_created = 0
+
+    # Iterate through ClickUp hierarchy
+    teams = get_clickup_teams()
+
+    for team in teams:
+        spaces = get_clickup_spaces(team["id"])
+
+        for space in spaces:
+            # Get lists from folders
+            folders = get_clickup_folders(space["id"])
+            for folder in folders:
+                lists = get_clickup_lists(folder["id"])
+                for lst in lists:
+                    tasks = get_tasks_by_status(lst["id"])
+
+                    for task in tasks:
+                        # Get or create Todoist project for this list
+                        if lst["id"] not in project_cache:
+                            todoist_projects = get_todoist_projects()  # Refresh
+                            project_cache[lst["id"]] = find_or_create_project(
+                                todoist_projects, lst["name"], parent_id
+                            )
+
+                        project_id = project_cache[lst["id"]]
+                        clickup_url = task.get("url", "")
+                        description = f"ClickUp: {clickup_url}" if clickup_url else ""
+
+                        create_todoist_task(task["name"], project_id, description)
+                        print(f"Created task: {task['name']}")
+                        tasks_created += 1
+
+            # Get folderless lists
+            folderless = get_folderless_lists(space["id"])
+            for lst in folderless:
+                tasks = get_tasks_by_status(lst["id"])
+
+                for task in tasks:
+                    if lst["id"] not in project_cache:
+                        todoist_projects = get_todoist_projects()
+                        project_cache[lst["id"]] = find_or_create_project(
+                            todoist_projects, lst["name"], parent_id
+                        )
+
+                    project_id = project_cache[lst["id"]]
+                    clickup_url = task.get("url", "")
+                    description = f"ClickUp: {clickup_url}" if clickup_url else ""
+
+                    create_todoist_task(task["name"], project_id, description)
+                    print(f"Created task: {task['name']}")
+                    tasks_created += 1
+
+    print(f"\nDone! Created {tasks_created} task(s) in Todoist.")
+
+
+if __name__ == "__main__":
+    main()
