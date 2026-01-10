@@ -1,7 +1,7 @@
 #export PATH=$HOME/Library/Python/3.9/bin:$PATH
 export PATH=/opt/homebrew/bin:$PATH
 export PATH=/opt/homebrew/sbin:$PATH
-export PATH=$PATH:/Users/ncko/.cargo/bin
+export PATH=$PATH:$HOME/.cargo/bin
 export PATH=/opt/homebrew/opt/sqlite/bin:$PATH
 export PATH=/opt/homebrew/opt/libpq/bin:$PATH
 
@@ -19,34 +19,10 @@ then
 fi
 
 # per-machine environment vars
-if [[ -f ./machine.zsh ]]; then
-    source ./machine.zsh
+if [[ -f $ZSH_CUSTOM/machine.zsh ]]; then
+    source $ZSH_CUSTOM/machine.zsh
 fi
 
-
-###
-# NVM
-###
-# takes forever to load
-#export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-#[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-# https://medium.com/@kinduff/automatic-version-switch-for-nvm-ff9e00ae67f3#:~:text=The%20automatic%20switch%20will%20switch,shell%20to%20make%20this%20work.
-# takes forever to load whenever you change directories or open a new terminal
-# so disabling for now
-#autoload -U add-zsh-hook
-#load-nvmrc() {
-    #if [[ -f .nvmrc && -r .nvmrc ]]; then
-        #nvm use
-    #elif [[ $(nvm version) != $(nvm version default)  ]]; then
-        #echo "Reverting to nvm default version"
-        #nvm use default
-    #fi
-#}
-# add-zsh-hook chpwd load-nvmrc
-#load-nvmrc
 
 # vi mode
 VI_MODE_RESET_PROMPT_ON_MODE_CHANGE=true
@@ -81,7 +57,7 @@ mise() {
   local command
   command="${1:-}"
   if [ "$#" = 0 ]; then
-    command /Users/ncko/.local/bin/mise
+    command $HOME/.local/bin/mise
     return
   fi
   shift
@@ -90,16 +66,16 @@ mise() {
   deactivate|shell|sh)
     # if argv doesn't contains -h,--help
     if [[ ! " $@ " =~ " --help " ]] && [[ ! " $@ " =~ " -h " ]]; then
-      eval "$(command /Users/ncko/.local/bin/mise "$command" "$@")"
+      eval "$(command $HOME/.local/bin/mise "$command" "$@")"
       return $?
     fi
     ;;
   esac
-  command /Users/ncko/.local/bin/mise "$command" "$@"
+  command $HOME/.local/bin/mise "$command" "$@"
 }
 
 _mise_hook() {
-  eval "$(/Users/ncko/.local/bin/mise hook-env -s zsh)";
+  eval "$($HOME/.local/bin/mise hook-env -s zsh)";
 }
 typeset -ag precmd_functions;
 if [[ -z "${precmd_functions[(r)_mise_hook]+1}" ]]; then
@@ -116,7 +92,7 @@ if [ -z "${_mise_cmd_not_found:-}" ]; then
     [ -n "$(declare -f command_not_found_handler)" ] && eval "${$(declare -f command_not_found_handler)/command_not_found_handler/_command_not_found_handler}"
 
     function command_not_found_handler() {
-        if [[ "$1" != "mise" && "$1" != "mise-"* ]] && /Users/ncko/.local/bin/mise hook-not-found -s zsh -- "$1"; then
+        if [[ "$1" != "mise" && "$1" != "mise-"* ]] && $HOME/.local/bin/mise hook-not-found -s zsh -- "$1"; then
           _mise_hook
           "$@"
         elif [ -n "$(declare -f _command_not_found_handler)" ]; then
