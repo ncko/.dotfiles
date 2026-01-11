@@ -28,6 +28,3 @@ Managed via `bootstrap/Brewfile`:
 
 **Manual:** neovim (compiled from source via `bootstrap/tools/neovim`)
 
-## Future Improvements
-
-- **Add `tms` script** to bin - referenced in `bindkey -s ^f "tms\n"` but not in the repo
