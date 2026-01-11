@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+echo "==> Updating all tools..."
+
+# Update Homebrew packages
+echo "==> Updating Homebrew..."
+brew update
+brew upgrade
+brew bundle --file="$BOOTSTRAP_DIR/Brewfile"
+brew cleanup
+
+# Update all manual tools
+echo "==> Updating manual tools..."
+for script in "$BOOTSTRAP_DIR/tools/"*; do
+    if [[ -x "$script" ]]; then
+        echo "==> Updating $(basename "$script")..."
+        "$script" update
+    fi
+done
+
+echo "==> Update complete!"

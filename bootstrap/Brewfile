@@ -1,0 +1,22 @@
+# Taps
+tap "homebrew/bundle"
+
+# CLI Tools
+brew "exa"
+brew "hurl"
+brew "mise"
+brew "stow"
+brew "tmux"
+brew "ripgrep"
+brew "fd"
+brew "jq"
+brew "git"
+brew "starship"
+
+# Build dependencies for neovim
+brew "cmake"
+brew "ninja"
+brew "gettext"
+
+# Casks
+cask "ghostty"

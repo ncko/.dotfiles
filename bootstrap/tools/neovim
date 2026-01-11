@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+NEOVIM_DIR="$HOME/.local/src/neovim"
+INSTALL_PREFIX="$HOME/.local"
+
+install_neovim() {
+    echo "Installing neovim from source..."
+
+    # Clone if not present
+    if [[ ! -d "$NEOVIM_DIR" ]]; then
+        mkdir -p "$(dirname "$NEOVIM_DIR")"
+        git clone https://github.com/neovim/neovim.git "$NEOVIM_DIR"
+    fi
+
+    cd "$NEOVIM_DIR"
+    git checkout stable
+    git pull origin stable
+
+    # Build and install
+    make CMAKE_BUILD_TYPE=Release CMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
+    make install
+
+    echo "Neovim installed to $INSTALL_PREFIX/bin/nvim"
+}
+
+update_neovim() {
+    echo "Updating neovim..."
+
+    if [[ ! -d "$NEOVIM_DIR" ]]; then
+        echo "Neovim not installed, running install..."
+        install_neovim
+        return
+    fi
+
+    cd "$NEOVIM_DIR"
+
+    # Fetch and check for updates
+    git fetch origin stable
+
+    LOCAL=$(git rev-parse HEAD)
+    REMOTE=$(git rev-parse origin/stable)
+
+    if [[ "$LOCAL" == "$REMOTE" ]]; then
+        echo "Neovim is already up to date"
+        return
+    fi
+
+    echo "New version available, rebuilding..."
+    git checkout stable
+    git pull origin stable
+
+    # Clean and rebuild
+    make distclean
+    make CMAKE_BUILD_TYPE=Release CMAKE_INSTALL_PREFIX="$INSTALL_PREFIX"
+    make install
+
+    echo "Neovim updated successfully"
+}
+
+case "${1:-install}" in
+    install)
+        install_neovim
+        ;;
+    update)
+        update_neovim
+        ;;
+    *)
+        echo "Usage: $0 {install|update}"
+        exit 1
+        ;;
+esac

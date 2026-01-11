@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+echo "==> Starting bootstrap install..."
+
+# Install Homebrew if not present
+if ! command -v brew &> /dev/null; then
+    echo "==> Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    # Add brew to PATH for this session
+    if [[ -f /opt/homebrew/bin/brew ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -f /usr/local/bin/brew ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+else
+    echo "==> Homebrew already installed"
+fi
+
+# Install packages from Brewfile
+echo "==> Installing Homebrew packages..."
+brew bundle --file="$BOOTSTRAP_DIR/Brewfile"
+
+# Run all tool scripts
+echo "==> Installing manual tools..."
+for script in "$BOOTSTRAP_DIR/tools/"*; do
+    if [[ -x "$script" ]]; then
+        echo "==> Running $(basename "$script")..."
+        "$script" install
+    fi
+done
+
+echo "==> Bootstrap complete!"
