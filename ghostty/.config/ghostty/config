@@ -1,0 +1,26 @@
+# Font
+font-family = JetBrainsMono Nerd Font
+font-size = 16
+
+# Theme (Ghostty has many built-in themes)
+theme = Catppuccin Mocha
+
+# Window
+window-padding-x = 10
+window-padding-y = 10
+window-decoration = true
+macos-titlebar-style = tabs
+
+# Disable built-in tabs/splits since using tmux
+keybind = super+t=unbind
+keybind = super+n=unbind
+
+# Copy/paste
+copy-on-select = clipboard
+
+# Cursor
+cursor-style = block
+cursor-style-blink = false
+
+# Shell integration
+shell-integration = zsh
