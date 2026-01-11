@@ -75,6 +75,8 @@ plugins=(
   vi-mode
   gradle
   poetry
+  fzf-tab
+  zsh-autosuggestions
 )
 
 source $ZSH/oh-my-zsh.sh
@@ -112,3 +114,6 @@ PROMPT="╭─$(aws_profile_prompt) ${user_host}${current_dir}${rvm_ruby}${vcs_b
 ╰─%B${user_symbol}%b "
 
 source <(fzf --zsh)
+
+# zoxide - smarter cd
+eval "$(zoxide init zsh)"

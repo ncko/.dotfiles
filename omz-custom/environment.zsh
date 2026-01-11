@@ -1,12 +1,15 @@
-export PATH=/opt/homebrew/bin:$PATH
-export PATH=/opt/homebrew/sbin:$PATH
-export PATH=$PATH:$HOME/.cargo/bin
-export PATH=/opt/homebrew/opt/sqlite/bin:$PATH
-export PATH=/opt/homebrew/opt/libpq/bin:$PATH
-
-# Created by `pipx` on 2021-10-11 05:20:52
-export PATH="/Users/$USER/.local/bin:$PATH"
-export PATH=$PATH:$HOME/go/bin
+# PATH Configuration
+path=(
+    /opt/homebrew/bin
+    /opt/homebrew/sbin
+    /opt/homebrew/opt/sqlite/bin
+    /opt/homebrew/opt/libpq/bin
+    $HOME/.local/bin
+    $path
+    $HOME/.cargo/bin
+    $HOME/go/bin
+)
+export PATH
 
 
 

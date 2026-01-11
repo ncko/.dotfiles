@@ -1,3 +1,9 @@
 [submodule "crossfit"]
 	path = crossfit
 	url = git@github.com:ncko/crossfit
+[submodule "omz-custom/plugins/fzf-tab"]
+	path = omz-custom/plugins/fzf-tab
+	url = https://github.com/Aloxaf/fzf-tab
+[submodule "omz-custom/plugins/zsh-autosuggestions"]
+	path = omz-custom/plugins/zsh-autosuggestions
+	url = https://github.com/zsh-users/zsh-autosuggestions

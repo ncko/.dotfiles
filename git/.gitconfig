@@ -91,3 +91,19 @@
 	defaultBranch = main
 [submodule]
 	recurse = true
+
+[core]
+	pager = delta
+
+[delta]
+	navigate = true
+	line-numbers = true
+
+[alias]
+	st = status -sb
+	co = checkout
+	cob = checkout -b
+	lg = log --oneline --graph --decorate -20
+	undo = reset HEAD~1 --mixed
+	stash-all = stash save --include-untracked
+	wip = !git add -A && git commit -m 'WIP'
