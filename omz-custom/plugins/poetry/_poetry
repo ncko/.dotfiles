@@ -194,4 +194,4 @@ _poetry_803706d06cd91e1e_complete()
 }
 
 _poetry_803706d06cd91e1e_complete "$@"
-compdef _poetry_803706d06cd91e1e_complete /Users/ncko/.local/pipx/venvs/poetry/bin/poetry
+compdef _poetry_803706d06cd91e1e_complete poetry

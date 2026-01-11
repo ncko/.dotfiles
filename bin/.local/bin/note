@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-
-tmux display-menu "personal" p "run 'move-note personal'" \
-	"work" w "run 'move-note work'"
-
