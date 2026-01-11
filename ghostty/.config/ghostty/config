@@ -3,7 +3,7 @@ font-family = JetBrainsMono Nerd Font
 font-size = 16
 
 # Theme (Ghostty has many built-in themes)
-theme = Catppuccin Mocha
+theme = TokyoNight
 
 # Window
 window-padding-x = 10
