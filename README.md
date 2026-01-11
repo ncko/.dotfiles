@@ -4,27 +4,7 @@
 
 Clone this repo into your home directory. Then, while inside the directory run `mac install` to install the dotfiles. You can also run `mac clean` to clean up the dotfiles.
 
-## Improvements
-
-### Issues to Fix
-
-1. **Hardcoded paths in `environment.zsh`** - Uses `/Users/ncko/.cargo/bin` instead of `$HOME/.cargo/bin`. Same issue on lines 12, 84, 93, 98, etc.
-
-2. **Broken machine.zsh sourcing** - Line 22 uses `./machine.zsh` (relative path) which only works when sourced from omz-custom directory. Should be:
-   ```zsh
-   if [[ -f $ZSH_CUSTOM/machine.zsh ]]; then
-       source $ZSH_CUSTOM/machine.zsh
-   fi
-   ```
-
-3. **Dead NVM code** - Lines 30-49 are commented out but line 34 tries to source nvm bash_completion (likely fails). Clean this up since mise is now used.
-
-4. **better-git-branch.sh bug** - Line 28 sets `main_branch=$(git rev-parse HEAD)` which is a SHA, not a branch name. Should be:
-   ```bash
-   main_branch=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
-   ```
-
-### Productivity Tool Suggestions
+## Productivity Tool Suggestions
 
 **1. zoxide** - Smarter `cd` that learns your habits
 ```bash

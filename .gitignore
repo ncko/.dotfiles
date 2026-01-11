@@ -1,4 +1,6 @@
 machine.zsh
+_state/
+.ruby-lsp/
 nvim/.config/gh/
 nvim/.config/yarn/
 keep/.local/state/gh/
