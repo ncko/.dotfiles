@@ -1,22 +1,33 @@
 # .dotfiles
 
-## Usage
-
-Clone this repo into your home directory. Then, while inside the directory run `mac install` to install the dotfiles. You can also run `mac clean` to clean up the dotfiles.
-
-## Required Tools
+## New Machine Setup
 
 ```bash
-brew install --cask ghostty font-jetbrains-mono-nerd-font
-brew install zoxide delta eza starship
+git clone https://github.com/ncko/.dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
+./bootstrap/install   # Install Homebrew packages + compile neovim
+./mac install         # Create symlinks for dotfiles
 ```
 
+## Usage
+
+```bash
+./mac install         # Install dotfiles (creates symlinks)
+./mac clean           # Remove all symlinks
+./mac reinstall       # Clean then install
+./bootstrap/update    # Update all Homebrew packages and tools
+```
+
+## Tools
+
+Managed via `bootstrap/Brewfile`:
+
 - **ghostty** - GPU-accelerated terminal emulator
-- **font-jetbrains-mono-nerd-font** - Nerd Font for terminal icons
 - **zoxide** - Smarter `cd` that learns your habits (`z projects`, `z dot`)
 - **delta** - Better git diffs with syntax highlighting
 - **eza** - Modern `ls` replacement with icons and git integration
 - **starship** - Fast, customizable prompt
+- **neovim** - Compiled from source via `bootstrap/tools/neovim`
 
 ## Future Improvements
 
