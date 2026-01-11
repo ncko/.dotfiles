@@ -22,12 +22,11 @@ cd ~/.dotfiles
 
 Managed via `bootstrap/Brewfile`:
 
-- **ghostty** - GPU-accelerated terminal emulator
-- **zoxide** - Smarter `cd` that learns your habits (`z projects`, `z dot`)
-- **delta** - Better git diffs with syntax highlighting
-- **eza** - Modern `ls` replacement with icons and git integration
-- **starship** - Fast, customizable prompt
-- **neovim** - Compiled from source via `bootstrap/tools/neovim`
+**CLI:** bat, delta, eza, fd, fzf, gawk, gh, git, gsed, hurl, jq, mise, ripgrep, starship, stow, tmux, watch, zoxide
+
+**Casks:** claude-code, docker, font-jetbrains-mono-nerd-font, ghostty, github, ngrok
+
+**Manual:** neovim (compiled from source via `bootstrap/tools/neovim`)
 
 ## Future Improvements
 
