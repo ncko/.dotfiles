@@ -10,7 +10,8 @@ export ZSH="$HOME/.oh-my-zsh"
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 # ZSH_THEME="random"
-ZSH_THEME="bira"
+# Using starship prompt instead of oh-my-zsh theme
+ZSH_THEME=""
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -102,18 +103,10 @@ export EDITOR=nvim
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /opt/homebrew/bin/terraform terraform
 
-aws_profile_prompt() {
-  if [ -n "${AWS_PROFILE+1}" ]; then
-    echo "aws:$AWS_PROFILE"
-  else
-    echo ""
-  fi
-}
-
-PROMPT="╭─$(aws_profile_prompt) ${user_host}${current_dir}${rvm_ruby}${vcs_branch}${venv_prompt}
-╰─%B${user_symbol}%b "
-
 source <(fzf --zsh)
 
 # zoxide - smarter cd
 eval "$(zoxide init zsh)"
+
+# starship prompt
+eval "$(starship init zsh)"

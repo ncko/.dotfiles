@@ -9,14 +9,14 @@ Clone this repo into your home directory. Then, while inside the directory run `
 These tools are configured but need to be installed:
 
 ```bash
-brew install zoxide delta eza
+brew install zoxide delta eza starship
 ```
 
 - **zoxide** - Smarter `cd` that learns your habits (`z projects`, `z dot`)
 - **delta** - Better git diffs with syntax highlighting
 - **eza** - Modern `ls` replacement with icons and git integration
+- **starship** - Fast, customizable prompt
 
 ## Future Improvements
 
 - **Add `tms` script** to bin - referenced in `bindkey -s ^f "tms\n"` but not in the repo
-- **Consider starship prompt** - faster and more customizable than bira theme
