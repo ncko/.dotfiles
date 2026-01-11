@@ -4,6 +4,7 @@ path=(
     /opt/homebrew/sbin
     /opt/homebrew/opt/sqlite/bin
     /opt/homebrew/opt/libpq/bin
+    /opt/homebrew/opt/mysql-client/bin
     $HOME/.local/bin
     $path
     $HOME/.cargo/bin

@@ -1,0 +1,238 @@
+#!/usr/bin/env bash
+#
+# devsync - Sync local directory to remote devbox
+#
+# Usage:
+#   devsync                    # Sync current directory to configured remote
+#   devsync --watch            # Watch for changes and auto-sync
+#   devsync --init             # Initialize .devsync config in current directory
+#   devsync --dry-run          # Show what would be synced without syncing
+#   devsync /path/to/dir       # Sync specific directory
+#
+# Configuration:
+#   Create a .devsync file in your project root with:
+#     DEVSYNC_HOST=user@devbox.example.com
+#     DEVSYNC_REMOTE_PATH=/home/user/projects/myproject
+#     DEVSYNC_EXCLUDE=(.git node_modules vendor __pycache__ .pytest_cache)
+#
+#   Or set DEVSYNC_HOST and DEVSYNC_REMOTE_PATH as environment variables.
+
+set -euo pipefail
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Defaults
+DEVSYNC_EXCLUDE=(.git node_modules vendor __pycache__ .pytest_cache .mypy_cache .ruff_cache "*.pyc" ".DS_Store")
+WATCH_MODE=false
+DRY_RUN=false
+INIT_MODE=false
+LOCAL_PATH=""
+
+usage() {
+    cat <<EOF
+Usage: devsync [OPTIONS] [PATH]
+
+Sync local directory to remote devbox using rsync.
+
+Options:
+    --watch, -w     Watch for changes and auto-sync (requires fswatch)
+    --dry-run, -n   Show what would be synced without syncing
+    --init, -i      Initialize .devsync config in current directory
+    --help, -h      Show this help message
+
+Configuration:
+    Create a .devsync file in your project root:
+
+        DEVSYNC_HOST=user@devbox.example.com
+        DEVSYNC_REMOTE_PATH=/home/user/projects/myproject
+        DEVSYNC_EXCLUDE=(.git node_modules vendor)
+
+    Or export DEVSYNC_HOST and DEVSYNC_REMOTE_PATH environment variables.
+
+Examples:
+    devsync                 # Sync current directory
+    devsync --watch         # Watch and auto-sync on changes
+    devsync ~/projects/app  # Sync specific directory
+    devsync --dry-run       # Preview sync without executing
+EOF
+}
+
+init_config() {
+    local config_file=".devsync"
+
+    if [[ -f "$config_file" ]]; then
+        echo -e "${YELLOW}Warning: .devsync already exists${NC}"
+        read -p "Overwrite? [y/N] " -n 1 -r
+        echo
+        [[ ! $REPLY =~ ^[Yy]$ ]] && exit 0
+    fi
+
+    cat > "$config_file" <<'EOF'
+# devsync configuration
+# Uncomment and configure the following:
+
+# Required: Remote host (user@hostname or ssh config alias)
+# DEVSYNC_HOST=user@devbox.example.com
+
+# Required: Remote directory path
+# DEVSYNC_REMOTE_PATH=/home/user/projects/myproject
+
+# Optional: Additional exclude patterns (defaults are always applied)
+# DEVSYNC_EXCLUDE=(.git node_modules vendor __pycache__)
+EOF
+
+    echo -e "${GREEN}Created .devsync config file${NC}"
+    echo "Edit .devsync and uncomment/configure DEVSYNC_HOST and DEVSYNC_REMOTE_PATH"
+}
+
+load_config() {
+    local search_dir="${1:-.}"
+    local config_file=""
+
+    # Search up the directory tree for .devsync
+    while [[ "$search_dir" != "/" ]]; do
+        if [[ -f "$search_dir/.devsync" ]]; then
+            config_file="$search_dir/.devsync"
+            break
+        fi
+        search_dir="$(dirname "$search_dir")"
+    done
+
+    if [[ -n "$config_file" ]]; then
+        # Source the config file
+        set -a
+        source "$config_file"
+        set +a
+        LOCAL_PATH="$(dirname "$config_file")"
+    fi
+}
+
+validate_config() {
+    local missing=()
+
+    [[ -z "${DEVSYNC_HOST:-}" ]] && missing+=("DEVSYNC_HOST")
+    [[ -z "${DEVSYNC_REMOTE_PATH:-}" ]] && missing+=("DEVSYNC_REMOTE_PATH")
+
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        echo -e "${RED}Error: Missing required configuration:${NC}"
+        for var in "${missing[@]}"; do
+            echo "  - $var"
+        done
+        echo
+        echo "Run 'devsync --init' to create a config file, or set environment variables."
+        exit 1
+    fi
+}
+
+build_exclude_args() {
+    local args=()
+    for pattern in "${DEVSYNC_EXCLUDE[@]}"; do
+        args+=("--exclude=$pattern")
+    done
+    echo "${args[@]}"
+}
+
+do_sync() {
+    local src="${LOCAL_PATH:-.}/"
+    local dest="$DEVSYNC_HOST:$DEVSYNC_REMOTE_PATH/"
+    local exclude_args
+    exclude_args=$(build_exclude_args)
+
+    local rsync_opts=(-avz --delete --progress)
+
+    if $DRY_RUN; then
+        rsync_opts+=(--dry-run)
+        echo -e "${YELLOW}DRY RUN - No changes will be made${NC}"
+    fi
+
+    echo -e "${BLUE}Syncing:${NC} $src -> $dest"
+
+    # shellcheck disable=SC2086
+    rsync "${rsync_opts[@]}" $exclude_args "$src" "$dest"
+
+    if ! $DRY_RUN; then
+        echo -e "${GREEN}Sync complete${NC}"
+    fi
+}
+
+watch_sync() {
+    if ! command -v fswatch &> /dev/null; then
+        echo -e "${RED}Error: fswatch not found. Install with: brew install fswatch${NC}"
+        exit 1
+    fi
+
+    local src="${LOCAL_PATH:-.}"
+
+    echo -e "${BLUE}Watching for changes in:${NC} $src"
+    echo -e "${BLUE}Syncing to:${NC} $DEVSYNC_HOST:$DEVSYNC_REMOTE_PATH"
+    echo "Press Ctrl+C to stop"
+    echo
+
+    # Initial sync
+    do_sync
+
+    # Build fswatch exclude patterns
+    local fswatch_excludes=()
+    for pattern in "${DEVSYNC_EXCLUDE[@]}"; do
+        fswatch_excludes+=(--exclude "$pattern")
+    done
+
+    # Watch for changes
+    fswatch -o "${fswatch_excludes[@]}" "$src" | while read -r; do
+        echo -e "\n${YELLOW}Change detected, syncing...${NC}"
+        do_sync
+    done
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --watch|-w)
+            WATCH_MODE=true
+            shift
+            ;;
+        --dry-run|-n)
+            DRY_RUN=true
+            shift
+            ;;
+        --init|-i)
+            INIT_MODE=true
+            shift
+            ;;
+        --help|-h)
+            usage
+            exit 0
+            ;;
+        -*)
+            echo -e "${RED}Unknown option: $1${NC}"
+            usage
+            exit 1
+            ;;
+        *)
+            LOCAL_PATH="$1"
+            shift
+            ;;
+    esac
+done
+
+# Handle init mode
+if $INIT_MODE; then
+    init_config
+    exit 0
+fi
+
+# Load and validate config
+load_config "${LOCAL_PATH:-.}"
+validate_config
+
+# Execute
+if $WATCH_MODE; then
+    watch_sync
+else
+    do_sync
+fi

@@ -21,6 +21,21 @@ brew "tmux"
 brew "watch"
 brew "zoxide"
 
+# Database Tools
+brew "mysql-client"                    # MySQL CLI client (mysql, mysqldump, etc.)
+brew "awscli"                          # AWS CLI for DynamoDB and other services
+
+# Python/Jupyter Development
+brew "jupyterlab"                      # Jupyter notebooks and lab interface
+brew "python-lsp-server"               # Python LSP for editor integration
+
+# Diagramming
+brew "mermaid-cli"                     # Mermaid diagram CLI (mmdc command)
+
+# File Sync
+brew "rsync"                           # File synchronization (usually pre-installed but ensures latest)
+brew "fswatch"                         # File system watcher for auto-sync
+
 # Build dependencies for neovim
 brew "cmake"
 brew "ninja"
