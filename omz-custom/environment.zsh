@@ -30,14 +30,6 @@ VI_MODE_RESET_PROMPT_ON_MODE_CHANGE=true
 VI_MODE_SET_CURSOR=true
 
 
-# Load pyenv automatically
-export PYENV_ROOT="$HOME/.pyenv"
-command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(pyenv init -)"
-
-# load pyenv-virtualenv automatically
-# eval "$(pyenv virtualenv-init -)"
-#
 
 # aws tab completion
 autoload bashcompinit && bashcompinit
