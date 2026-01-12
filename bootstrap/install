@@ -5,6 +5,12 @@ BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "==> Starting bootstrap install..."
 
+# Initialize git submodules (oh-my-zsh plugins, etc.)
+echo "==> Initializing git submodules..."
+DOTFILES_DIR="$(cd "$BOOTSTRAP_DIR/.." && pwd)"
+git -C "$DOTFILES_DIR" submodule init
+git -C "$DOTFILES_DIR" submodule update
+
 # Install Homebrew if not present
 if ! command -v brew &> /dev/null; then
     echo "==> Installing Homebrew..."

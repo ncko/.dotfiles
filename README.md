@@ -7,7 +7,7 @@
 ```bash
 git clone https://github.com/ncko/.dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
-./bootstrap/install   # Install Homebrew packages + compile neovim
+./bootstrap/install   # Init submodules, install Homebrew packages, compile neovim
 ./mac install         # Create symlinks for dotfiles
 ```
 
@@ -55,23 +55,20 @@ For a completely new machine without SSH access:
 
 ```bash
 # 1. Clone via HTTPS (no SSH key needed yet)
-git clone https://github.com/ncko/dotfiles.git ~/.dotfiles
+git clone https://github.com/ncko/.dotfiles.git ~/.dotfiles
 
-# 2. Install Homebrew (if needed)
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# 3. Run bootstrap (installs 1password)
+# 2. Run bootstrap (inits submodules, installs Homebrew + packages)
 cd ~/.dotfiles
 ./bootstrap/install
 
-# 4. Complete manual 1Password setup (see above)
-
-# 5. Install dotfiles
+# 3. Install dotfiles
 ./mac install
 
-# 6. Verify SSH, then clone private submodules
+# 4. Complete manual 1Password setup (see above)
+
+# 5. Verify SSH works, then init private submodules
 ssh -T git@github.com
-git submodule update --init
+git submodule init crossfit && git submodule update crossfit
 ```
 
 ---
@@ -490,8 +487,10 @@ alias myalias="custom command"
 
 The `crossfit/` directory is a git submodule pointing to a private repository.
 
-To set up on a new machine with access:
+Public submodules (oh-my-zsh plugins) are initialized automatically by `./bootstrap/install`.
+
+To init the private crossfit submodule (requires SSH access):
 
 ```bash
-git submodule update --init --recursive
+git submodule init crossfit && git submodule update crossfit
 ```
