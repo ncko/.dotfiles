@@ -26,7 +26,53 @@ cd ~/.dotfiles
 STOW_FOLDERS=git,vim,zsh ./mac install  # Install specific packages only
 ```
 
-**Default packages:** `git,vim,zsh,bin,tmux,crossfit,keep,ghostty,aws`
+**Default packages:** `git,vim,zsh,bin,tmux,crossfit,keep,ghostty,aws,ssh`
+
+---
+
+## SSH Keys with 1Password
+
+SSH keys are stored in 1Password and served via their native SSH agent. This avoids storing private keys on disk.
+
+### Setup on New Machine
+
+After running `./bootstrap/install`, complete these manual steps:
+
+1. **Open 1Password app** and sign in
+2. **Enable SSH Agent**: Settings > Developer > SSH Agent (toggle on)
+3. **Add SSH keys** to your 1Password vault (or sync from another device)
+4. **Authorize keys** on GitHub at github.com/settings/keys
+
+### Verify SSH Works
+
+```bash
+ssh -T git@github.com
+```
+
+### Bootstrap Flow (Full)
+
+For a completely new machine without SSH access:
+
+```bash
+# 1. Clone via HTTPS (no SSH key needed yet)
+git clone https://github.com/ncko/dotfiles.git ~/.dotfiles
+
+# 2. Install Homebrew (if needed)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# 3. Run bootstrap (installs 1password)
+cd ~/.dotfiles
+./bootstrap/install
+
+# 4. Complete manual 1Password setup (see above)
+
+# 5. Install dotfiles
+./mac install
+
+# 6. Verify SSH, then clone private submodules
+ssh -T git@github.com
+git submodule update --init
+```
 
 ---
 
@@ -42,6 +88,7 @@ Each directory is a stow package. Contents are symlinked relative to `$HOME`.
 | `bin` | Custom scripts | `.local/bin/*` - 15 utility scripts |
 | `tmux` | Terminal multiplexer | `.tmux.conf` - Tokyo Night theme |
 | `ghostty` | Terminal emulator | `.config/ghostty/config` |
+| `ssh` | SSH configuration | `.ssh/config` - 1Password SSH agent |
 | `aws` | AWS tools | `.sawsrc` for SAWS shell |
 | `keep` | Misc data files | Alarm sounds, homelab nodes, snippet database |
 | `omz-custom` | Oh My Zsh custom | Aliases, environment, plugins (sourced, not stowed) |
@@ -384,6 +431,7 @@ Managed via `bootstrap/Brewfile`.
 | `stow` | Symlink manager |
 | `tmux` | Terminal multiplexer |
 | `zoxide` | Smart cd (`z`) |
+| `1password-cli` | CLI for secrets automation |
 
 ### Database & Cloud
 
@@ -414,6 +462,7 @@ Managed via `bootstrap/Brewfile`.
 | `claude-code` | Claude Code IDE |
 | `docker` | Container platform |
 | `ghostty` | Terminal emulator |
+| `1password` | Password manager with SSH agent |
 | `github` | GitHub Desktop |
 | `ngrok` | Tunneling |
 

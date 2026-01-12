@@ -41,6 +41,10 @@ brew "cmake"
 brew "ninja"
 brew "gettext"
 
+# 1Password
+cask "1password"                        # Password manager (includes SSH agent)
+brew "1password-cli"                    # CLI for secrets automation
+
 # Casks
 cask "claude-code"
 cask "docker"
