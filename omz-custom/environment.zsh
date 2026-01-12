@@ -31,10 +31,10 @@ VI_MODE_SET_CURSOR=true
 
 
 
-# aws tab completion
-autoload bashcompinit && bashcompinit
-autoload -Uz compinit && compinit
+# bash completions (aws, terraform)
+autoload -U +X bashcompinit && bashcompinit
 complete -C "$(which aws_completer)" aws
+complete -o nospace -C /opt/homebrew/bin/terraform terraform
 
 export EDITOR=nvim
 
