@@ -173,17 +173,18 @@ ddb-query() {
 # =============================================================================
 
 # Render mermaid diagram to PNG
-# Usage: mmd diagram.mmd [output.png]
+# Usage: mmd diagram.mmd [output.png] [width]
 mmd() {
     local input="$1"
     local output="${2:-${input%.*}.png}"
+    local width="$3"
 
     if [[ -z "$input" ]]; then
-        echo "Usage: mmd <input.mmd> [output.png]"
+        echo "Usage: mmd <input.mmd> [output.png] [width]"
         return 1
     fi
 
-    mmdc -i "$input" -o "$output" -t dark -b transparent
+    mmdc -i "$input" -o "$output" ${width:+-w "$width"}
     echo "Created: $output"
 }
 
@@ -191,13 +192,14 @@ mmd() {
 mmd-svg() {
     local input="$1"
     local output="${2:-${input%.*}.svg}"
+    local width="$3"
 
     if [[ -z "$input" ]]; then
-        echo "Usage: mmd-svg <input.mmd> [output.svg]"
+        echo "Usage: mmd-svg <input.mmd> [output.svg] [width]"
         return 1
     fi
 
-    mmdc -i "$input" -o "$output" -t dark -b transparent
+    mmdc -i "$input" -o "$output" ${width:+-w "$width"}
     echo "Created: $output"
 }
 
@@ -205,13 +207,14 @@ mmd-svg() {
 mmd-pdf() {
     local input="$1"
     local output="${2:-${input%.*}.pdf}"
+    local width="$3"
 
     if [[ -z "$input" ]]; then
-        echo "Usage: mmd-pdf <input.mmd> [output.pdf]"
+        echo "Usage: mmd-pdf <input.mmd> [output.pdf] [width]"
         return 1
     fi
 
-    mmdc -i "$input" -o "$output" -t dark
+    mmdc -i "$input" -o "$output" ${width:+-w "$width"}
     echo "Created: $output"
 }
 
@@ -219,16 +222,17 @@ mmd-pdf() {
 mmd-watch() {
     local input="$1"
     local output="${2:-${input%.*}.png}"
+    local width="$3"
 
     if [[ -z "$input" ]]; then
-        echo "Usage: mmd-watch <input.mmd> [output.png]"
+        echo "Usage: mmd-watch <input.mmd> [output.png] [width]"
         return 1
     fi
 
     echo "Watching $input for changes..."
     fswatch -o "$input" | while read -r; do
         echo "Change detected, rendering..."
-        mmdc -i "$input" -o "$output" -t dark -b transparent
+        mmdc -i "$input" -o "$output" ${width:+-w "$width"}
         echo "Updated: $output"
     done
 }
