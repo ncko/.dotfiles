@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+
+# usage
+# work                    # open existing repo (fzf at repo level)
+# work -w                 # open existing worktree (fzf at worktree level)
+# work -n org/repo        # new project at ~/worktrees/org/repo/main
+# work -c org/repo        # clone repo to ~/worktrees/org/repo/main
+
+worktrees_path="$HOME/worktrees"
+
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+function default() {
+  repos=$(find "$worktrees_path" -mindepth 2 -maxdepth 2 -type d 2>/dev/null)
+  if [ -z "$repos" ]; then
+    echo "No worktrees found in $worktrees_path"
+    exit 1
+  fi
+  session=$(printf "%s" "$repos" | fzf-tmux -p --reverse)
+  [ -n "$session" ] && open-session "$session"
+  exit
+}
+
+function select_worktree() {
+  worktrees=$(find "$worktrees_path" -mindepth 3 -maxdepth 3 -type d 2>/dev/null)
+  if [ -z "$worktrees" ]; then
+    echo "No worktrees found in $worktrees_path"
+    exit 1
+  fi
+  session=$(printf "%s" "$worktrees" | fzf-tmux -p --reverse)
+  [ -n "$session" ] && open-session "$session"
+  exit
+}
+
+function new_project() {
+  mkdir -p "$worktrees_path/${OPTARG}/main"
+  open-session "$worktrees_path/${OPTARG}/main"
+  exit
+}
+
+function clone_project() {
+  local target="$worktrees_path/${OPTARG}/main"
+  if [ -d "$target" ]; then
+    open-session "$target"
+    exit
+  fi
+  git clone --recurse-submodules gh:"${OPTARG}" "$target"
+  open-session "$target"
+  exit
+}
+
+function help() {
+  echo "${bold}USAGE${normal}"
+  echo "  work [flags]"
+  echo ""
+  echo "${bold}FLAGS${normal}"
+  echo "  -c    clone a repo to ~/worktrees/<org>/<repo>/main"
+  echo "  -n    create a new project at ~/worktrees/<org>/<repo>/main"
+  echo "  -w    select from worktree level (branch directories)"
+  echo "  -h    print this message"
+  echo ""
+  echo "${bold}EXAMPLES${normal}"
+  echo "To open an existing repo"
+  echo "  $ work"
+  echo ""
+  echo "To open a specific worktree/branch"
+  echo "  $ work -w"
+  echo ""
+  echo "Clone a repo to ~/worktrees/ncko/myrepo/main"
+  echo "  $ work -c ncko/myrepo"
+  echo ""
+  echo "Create a new project at ~/worktrees/ncko/myproject/main"
+  echo "  $ work -n ncko/myproject"
+  echo ""
+}
+
+if [ $# -eq 0 ]; then
+  default
+fi
+
+while getopts "n:c:wh" option
+  do
+    case "${option}" in
+      n) new_project;;
+      c) clone_project;;
+      w) select_worktree;;
+      h) help && exit;;
+    esac
+  done
+
+help && exit 1
