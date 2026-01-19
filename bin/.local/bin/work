@@ -13,13 +13,52 @@ bold=$(tput bold)
 normal=$(tput sgr0)
 
 function default() {
+  # Find organizations at depth 1
+  orgs=$(find "$worktrees_path" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+  
+  # Find repos at depth 2
   repos=$(find "$worktrees_path" -mindepth 2 -maxdepth 2 -type d 2>/dev/null)
-  if [ -z "$repos" ]; then
-    echo "No worktrees found in $worktrees_path"
+  
+  # Check if we have anything to show
+  if [ -z "$orgs" ] && [ -z "$repos" ]; then
+    echo "No organizations or repos found in $worktrees_path"
     exit 1
   fi
-  session=$(printf "%s" "$repos" | fzf-tmux -p --reverse)
-  [ -n "$session" ] && open-session "$session" "wt-"
+  
+  # Format orgs with [org] marker
+  formatted_orgs=""
+  for org_path in $orgs; do
+    org_name=$(basename "$org_path")
+    formatted_orgs="${formatted_orgs}[org] ${org_name}\n"
+  done
+  
+  # Format repos as relative paths
+  formatted_repos=""
+  for repo_path in $repos; do
+    # Convert /Users/ncko/worktrees/crossfit/cfweb -> crossfit/cfweb
+    relative_path="${repo_path#${worktrees_path}/}"
+    formatted_repos="${formatted_repos}${relative_path}\n"
+  done
+  
+  # Combine: orgs first, then repos
+  all_options="${formatted_orgs}${formatted_repos}"
+  
+  # Present in fzf
+  selected=$(printf "$all_options" | fzf-tmux -p --reverse)
+  
+  # Check if user cancelled
+  [ -z "$selected" ] && exit 0
+  
+  # Detect what was selected and open accordingly
+  if [[ "$selected" == "[org] "* ]]; then
+    # Extract org name: "[org] crossfit" -> "crossfit"
+    org_name="${selected#\[org\] }"
+    open-session "$worktrees_path/$org_name" "wt-"
+  else
+    # Regular repo: "crossfit/cfweb"
+    open-session "$worktrees_path/$selected" "wt-"
+  fi
+  
   exit
 }
 

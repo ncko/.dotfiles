@@ -13,7 +13,7 @@ tmux_running=$(pgrep tmux)
 
 # if not (-z) in tmux session and tmux is not running
 if [[ -z $in_tmux_session ]] && [[ -z $tmux_running ]]; then
-	tmux new-session -s $session_name -c $session
+	tmux new-session -s "$session_name" -c "$session"
 	exit 0
 fi
 
@@ -24,7 +24,7 @@ fi
 
 # if not (-z) in tmux session and tmux is running
 if [[ -z $in_tmux_session ]]; then
-	tmux attach-session -t $session_name
+	tmux attach-session -t "$session_name"
 else
-	tmux switch-client -t $session_name
+	tmux switch-client -t "$session_name"
 fi
