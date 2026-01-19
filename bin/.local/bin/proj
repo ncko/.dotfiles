@@ -19,25 +19,25 @@ function default() {
   all_projects=`echo "$deck_and_projects\n$dotfiles\n$nvim"`
   session=`printf "$all_projects" | fzf-tmux -p --reverse`
 
-  open-session "$session"
+  open-session "$session" "pj-"
   exit
 }
 
 function on_deck() {
   mkdir -p "$deck_path/${OPTARG}"
-  open-session "$deck_path/${OPTARG}"
+  open-session "$deck_path/${OPTARG}" "pj-"
   exit
 }
 
 function new_project() {
   mkdir -p "$projects_path/${OPTARG}"
-  open-session "$projects_path/${OPTARG}"
+  open-session "$projects_path/${OPTARG}" "pj-"
   exit
 }
 
 function clone_project() {
   git clone --recurse-submodules gh:"${OPTARG}" "$projects_path/${OPTARG}"
-  open-session "$projects_path/${OPTARG}"
+  open-session "$projects_path/${OPTARG}" "pj-"
   exit
 }
 

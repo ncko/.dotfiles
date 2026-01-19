@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
 
-# open-session <path>
+# open-session <path> [prefix]
 # open-session ~/projects/ncko/cfsandbox-tf
+# open-session ~/projects/ncko/cfsandbox-tf pj-
 
 session=$1
-session_name=$(basename "$session" | tr . _)
+prefix="${2:-}"
+session_name="${prefix}$(basename "$session" | tr . _)"
 in_tmux_session=$TMUX
 tmux_running=$(pgrep tmux)
 

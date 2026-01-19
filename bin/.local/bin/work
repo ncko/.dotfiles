@@ -2,9 +2,10 @@
 
 # usage
 # work                    # open existing repo (fzf at repo level)
-# work -w                 # open existing worktree (fzf at worktree level)
-# work -n org/repo        # new project at ~/worktrees/org/repo/main
-# work -c org/repo        # clone repo to ~/worktrees/org/repo/main
+# work -w                 # open existing worktree (fzf at worktree level, adds window)
+# work -a f/branch-name   # add worktree with proper naming (run from repo dir)
+# work -n org/repo        # new bare repo at ~/worktrees/org/repo
+# work -c org/repo        # clone bare repo to ~/worktrees/org/repo
 
 worktrees_path="$HOME/worktrees"
 
@@ -18,35 +19,245 @@ function default() {
     exit 1
   fi
   session=$(printf "%s" "$repos" | fzf-tmux -p --reverse)
-  [ -n "$session" ] && open-session "$session"
+  [ -n "$session" ] && open-session "$session" "wt-"
   exit
 }
 
 function select_worktree() {
-  worktrees=$(find "$worktrees_path" -mindepth 3 -maxdepth 3 -type d 2>/dev/null)
-  if [ -z "$worktrees" ]; then
-    echo "No worktrees found in $worktrees_path"
+  # Find all repos at depth 2
+  repos=$(find "$worktrees_path" -mindepth 2 -maxdepth 2 -type d 2>/dev/null)
+  
+  if [ -z "$repos" ]; then
+    echo "No repos found in $worktrees_path"
     exit 1
   fi
-  session=$(printf "%s" "$worktrees" | fzf-tmux -p --reverse)
-  [ -n "$session" ] && open-session "$session"
+  
+  # Build list of worktrees with relative paths
+  all_worktrees=""
+  for repo_path in $repos; do
+    # Get relative path: crossfit/cfweb
+    org_repo="${repo_path#${worktrees_path}/}"
+    
+    # Find worktree directories (exclude git metadata folders)
+    worktrees=$(find "$repo_path" -mindepth 1 -maxdepth 1 -type d \
+      ! -name 'objects' \
+      ! -name 'hooks' \
+      ! -name 'refs' \
+      ! -name 'info' \
+      ! -name 'worktrees' \
+      ! -name 'branches' \
+      ! -name 'logs' \
+      2>/dev/null)
+    
+    # Add each worktree to list with relative path
+    for wt_path in $worktrees; do
+      wt_name=$(basename "$wt_path")
+      all_worktrees="${all_worktrees}${org_repo}/${wt_name}\n"
+    done
+  done
+  
+  if [ -z "$all_worktrees" ]; then
+    echo "No worktrees found. Use 'work -a <branch>' to create one."
+    exit 1
+  fi
+  
+  # User selects from relative paths: crossfit/cfweb/f-ps-123-something
+  selected=$(printf "$all_worktrees" | fzf-tmux -p --reverse)
+  [ -z "$selected" ] && exit 1
+  
+  # Parse selection: org/repo/worktree-dir
+  org_repo=$(dirname "$selected")      # crossfit/cfweb
+  dir_name=$(basename "$selected")     # f-ps-123-something
+  
+  repo_dir="${worktrees_path}/${org_repo}"
+  repo_name=$(basename "$repo_dir")    # cfweb
+  selected_worktree="${repo_dir}/${dir_name}"
+  
+  # TRANSLATION: Directory → Window name
+  # f-ps-123-something → ps-123-something (strip prefix before first -)
+  # main → main (no translation if no -)
+  if [[ "$dir_name" == *-* ]]; then
+    window_name=$(echo "$dir_name" | sed 's/^[^-]*-//')
+  else
+    window_name="$dir_name"
+  fi
+  
+  session_name="wt-${repo_name}"
+  
+  # Ensure session exists for the repo (at repo level, not worktree level)
+  if ! tmux has-session -t "$session_name" 2>/dev/null; then
+    tmux new-session -s "$session_name" -c "$repo_dir" -d
+  fi
+  
+  # Check if window with this name already exists
+  if tmux list-windows -t "$session_name" -F "#{window_name}" 2>/dev/null | grep -q "^${window_name}$"; then
+    # Window exists, switch to it
+    if [ -n "$TMUX" ]; then
+      tmux switch-client -t "${session_name}:${window_name}"
+    else
+      tmux attach-session -t "${session_name}:${window_name}"
+    fi
+  else
+    # Create new window with window name, set working dir to worktree
+    tmux new-window -t "$session_name" -n "$window_name" -c "$selected_worktree"
+    
+    # Switch to the new window
+    if [ -n "$TMUX" ]; then
+      tmux switch-client -t "${session_name}:${window_name}"
+    else
+      tmux attach-session -t "${session_name}:${window_name}"
+    fi
+  fi
+  
+  exit
+}
+
+function add_worktree() {
+  local branch="${OPTARG}"
+  local dir_name=$(echo "$branch" | tr '/' '-')
+  
+  # Check if we're in a bare repo
+  if ! git rev-parse --is-bare-repository &>/dev/null 2>&1; then
+    echo "Error: Must be run from within a bare repository"
+    echo "Usage: cd ~/worktrees/org/repo && work -a f/ps-123-branch"
+    exit 1
+  fi
+  
+  repo_dir="$(pwd)"
+  repo_name=$(basename "$repo_dir")
+  
+  # Check if FETCH_HEAD exists and is stale (>5 minutes = 300 seconds)
+  # In bare repos, FETCH_HEAD is at ./FETCH_HEAD
+  if [ -f "FETCH_HEAD" ]; then
+    last_fetch=$(stat -f %m FETCH_HEAD 2>/dev/null || echo 0)
+  else
+    last_fetch=0
+  fi
+  current_time=$(date +%s)
+  time_diff=$((current_time - last_fetch))
+  
+  # Prompt to fetch if stale
+  if [ $time_diff -gt 300 ]; then
+    read -p "Remote refs might be stale. Fetch from origin? [Y/n] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+      git fetch origin
+    fi
+  fi
+  
+  # Check if worktree already exists for this branch (using --porcelain for reliability)
+  existing_worktree=$(git worktree list --porcelain | \
+    grep -A 2 "^branch refs/heads/$branch$" | \
+    grep "^worktree " | \
+    cut -d' ' -f2)
+  
+  if [ -n "$existing_worktree" ]; then
+    # Branch already checked out, switch to it
+    selected_worktree="$existing_worktree"
+    dir_name=$(basename "$selected_worktree")
+    
+    # Calculate window name
+    if [[ "$dir_name" == *-* ]]; then
+      window_name=$(echo "$dir_name" | sed 's/^[^-]*-//')
+    else
+      window_name="$dir_name"
+    fi
+    
+    session_name="wt-${repo_name}"
+    
+    # Ensure session exists
+    if ! tmux has-session -t "$session_name" 2>/dev/null; then
+      tmux new-session -s "$session_name" -c "$repo_dir" -d
+    fi
+    
+    # Check if window exists, create or switch
+    if tmux list-windows -t "$session_name" -F "#{window_name}" 2>/dev/null | grep -q "^${window_name}$"; then
+      if [ -n "$TMUX" ]; then
+        tmux switch-client -t "${session_name}:${window_name}"
+      else
+        tmux attach-session -t "${session_name}:${window_name}"
+      fi
+    else
+      tmux new-window -t "$session_name" -n "$window_name" -c "$selected_worktree"
+      if [ -n "$TMUX" ]; then
+        tmux switch-client -t "${session_name}:${window_name}"
+      else
+        tmux attach-session -t "${session_name}:${window_name}"
+      fi
+    fi
+    
+    exit
+  fi
+  
+  # Detect branch status and create worktree accordingly
+  if git show-ref --verify --quiet "refs/heads/$branch"; then
+    # Local branch exists, check it out
+    git worktree add "$dir_name" "$branch"
+  elif git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+    # Remote branch exists, track it
+    git worktree add "$dir_name" "$branch"
+  else
+    # Neither exists, create new branch
+    git worktree add "$dir_name" -b "$branch"
+  fi
+  
+  selected_worktree="${repo_dir}/${dir_name}"
+  
+  # Calculate window name
+  if [[ "$dir_name" == *-* ]]; then
+    window_name=$(echo "$dir_name" | sed 's/^[^-]*-//')
+  else
+    window_name="$dir_name"
+  fi
+  
+  session_name="wt-${repo_name}"
+  
+  # Ensure session exists at repo level
+  if ! tmux has-session -t "$session_name" 2>/dev/null; then
+    tmux new-session -s "$session_name" -c "$repo_dir" -d
+  fi
+  
+  # Check if window already exists
+  if tmux list-windows -t "$session_name" -F "#{window_name}" 2>/dev/null | grep -q "^${window_name}$"; then
+    if [ -n "$TMUX" ]; then
+      tmux switch-client -t "${session_name}:${window_name}"
+    else
+      tmux attach-session -t "${session_name}:${window_name}"
+    fi
+  else
+    tmux new-window -t "$session_name" -n "$window_name" -c "$selected_worktree"
+    if [ -n "$TMUX" ]; then
+      tmux switch-client -t "${session_name}:${window_name}"
+    else
+      tmux attach-session -t "${session_name}:${window_name}"
+    fi
+  fi
+  
   exit
 }
 
 function new_project() {
-  mkdir -p "$worktrees_path/${OPTARG}/main"
-  open-session "$worktrees_path/${OPTARG}/main"
+  local target="$worktrees_path/${OPTARG}"
+  mkdir -p "$target"
+  cd "$target"
+  git init --bare
+  open-session "$target" "wt-"
   exit
 }
 
 function clone_project() {
-  local target="$worktrees_path/${OPTARG}/main"
+  local org_repo="${OPTARG}"
+  local target="$worktrees_path/${org_repo}"
+  
   if [ -d "$target" ]; then
-    open-session "$target"
+    open-session "$target" "wt-"
     exit
   fi
-  git clone --recurse-submodules gh:"${OPTARG}" "$target"
-  open-session "$target"
+  
+  # Clone as bare repo
+  git clone --bare gh:"${org_repo}" "$target"
+  
+  open-session "$target" "wt-"
   exit
 }
 
@@ -55,9 +266,10 @@ function help() {
   echo "  work [flags]"
   echo ""
   echo "${bold}FLAGS${normal}"
-  echo "  -c    clone a repo to ~/worktrees/<org>/<repo>/main"
-  echo "  -n    create a new project at ~/worktrees/<org>/<repo>/main"
-  echo "  -w    select from worktree level (branch directories)"
+  echo "  -a    add worktree with proper naming (must be in repo dir)"
+  echo "  -c    clone a repo as bare repo"
+  echo "  -n    create a new bare repo"
+  echo "  -w    select worktree (branch) and add window to session"
   echo "  -h    print this message"
   echo ""
   echo "${bold}EXAMPLES${normal}"
@@ -67,11 +279,17 @@ function help() {
   echo "To open a specific worktree/branch"
   echo "  $ work -w"
   echo ""
-  echo "Clone a repo to ~/worktrees/ncko/myrepo/main"
+  echo "Clone a repo as bare repo"
   echo "  $ work -c ncko/myrepo"
   echo ""
-  echo "Create a new project at ~/worktrees/ncko/myproject/main"
+  echo "Create a new bare repo"
   echo "  $ work -n ncko/myproject"
+  echo ""
+  echo "Add a worktree (from within repo directory)"
+  echo "  $ cd ~/worktrees/crossfit/cfweb"
+  echo "  $ work -a f/ps-123-add-feature"
+  echo "  # Creates worktree at: f-ps-123-add-feature/"
+  echo "  # Opens tmux window named: ps-123-add-feature"
   echo ""
 }
 
@@ -79,9 +297,10 @@ if [ $# -eq 0 ]; then
   default
 fi
 
-while getopts "n:c:wh" option
+while getopts "a:n:c:wh" option
   do
     case "${option}" in
+      a) add_worktree;;
       n) new_project;;
       c) clone_project;;
       w) select_worktree;;
