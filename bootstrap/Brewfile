@@ -1,3 +1,6 @@
+# Taps
+tap "anomalyco/tap"
+
 # CLI Tools
 brew "bat"
 brew "delta"
@@ -11,7 +14,7 @@ brew "gsed"
 brew "hurl"
 brew "jq"
 brew "mise"
-brew "anomalyco/tap/opencode"
+brew "opencode"
 brew "ripgrep"
 brew "starship"
 brew "stow"
@@ -45,7 +48,7 @@ cask "1password-cli"                    # CLI for secrets automation
 
 # Casks
 cask "claude-code"
-cask "docker"
+cask "docker-desktop"
 cask "font-jetbrains-mono-nerd-font"
 cask "ghostty"
 cask "github"
