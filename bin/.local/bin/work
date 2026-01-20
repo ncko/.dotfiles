@@ -77,6 +77,14 @@ function select_worktree() {
     # Get relative path: crossfit/cfweb
     org_repo="${repo_path#${worktrees_path}/}"
     
+    # Extract org name to check exclusion list
+    org_name=$(echo "$org_repo" | cut -d'/' -f1)
+    
+    # Skip excluded orgs
+    if [[ "$org_name" == "ncko" ]] || [[ "$org_name" == "tickets" ]] || [[ "$org_name" == ".opencode" ]]; then
+      continue
+    fi
+    
     # Find worktree directories (exclude git metadata folders)
     worktrees=$(find "$repo_path" -mindepth 1 -maxdepth 1 -type d \
       ! -name 'objects' \
