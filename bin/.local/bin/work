@@ -108,8 +108,8 @@ function select_worktree() {
   org_repo=$(dirname "$selected")      # crossfit/cfweb
   dir_name=$(basename "$selected")     # f-ps-123-something
   
+  org_name=$(echo "$org_repo" | cut -d'/' -f1)  # crossfit
   repo_dir="${worktrees_path}/${org_repo}"
-  repo_name=$(basename "$repo_dir")    # cfweb
   selected_worktree="${repo_dir}/${dir_name}"
   
   # TRANSLATION: Directory → Window name
@@ -121,29 +121,33 @@ function select_worktree() {
     window_name="$dir_name"
   fi
   
-  session_name="wt-${repo_name}"
-  
-  # Ensure session exists for the repo (at repo level, not worktree level)
-  if ! tmux has-session -t "$session_name" 2>/dev/null; then
-    tmux new-session -s "$session_name" -c "$repo_dir" -d
-  fi
-  
-  # Check if window with this name already exists
-  if tmux list-windows -t "$session_name" -F "#{window_name}" 2>/dev/null | grep -q "^${window_name}$"; then
-    # Window exists, switch to it
-    if [ -n "$TMUX" ]; then
-      tmux switch-client -t "${session_name}:${window_name}"
+  # Create window in current session (if in tmux) or org-level session (if not)
+  if [ -n "$TMUX" ]; then
+    # In tmux - create window in current session
+    if tmux list-windows -F "#{window_name}" 2>/dev/null | grep -q "^${window_name}$"; then
+      # Window exists, switch to it
+      tmux select-window -t ":${window_name}"
     else
-      tmux attach-session -t "${session_name}:${window_name}"
+      # Create new window in current session
+      tmux new-window -n "$window_name" -c "$selected_worktree"
     fi
   else
-    # Create new window with window name, set working dir to worktree
-    tmux new-window -t "$session_name" -n "$window_name" -c "$selected_worktree"
+    # Not in tmux - use org-level session
+    org_path="${worktrees_path}/${org_name}"
+    session_name="wt-${org_name}"
     
-    # Switch to the new window
-    if [ -n "$TMUX" ]; then
-      tmux switch-client -t "${session_name}:${window_name}"
+    # Ensure org-level session exists
+    if ! tmux has-session -t "$session_name" 2>/dev/null; then
+      tmux new-session -s "$session_name" -c "$org_path" -d
+    fi
+    
+    # Check if window exists in org session
+    if tmux list-windows -t "$session_name" -F "#{window_name}" 2>/dev/null | grep -q "^${window_name}$"; then
+      # Window exists, attach to it
+      tmux attach-session -t "${session_name}:${window_name}"
     else
+      # Create new window and attach
+      tmux new-window -t "$session_name" -n "$window_name" -c "$selected_worktree"
       tmux attach-session -t "${session_name}:${window_name}"
     fi
   fi
@@ -164,6 +168,8 @@ function add_worktree() {
   
   repo_dir="$(pwd)"
   repo_name=$(basename "$repo_dir")
+  org_dir=$(dirname "$repo_dir")
+  org_name=$(basename "$org_dir")
   
   # Check if FETCH_HEAD exists and is stale (>5 minutes = 300 seconds)
   # In bare repos, FETCH_HEAD is at ./FETCH_HEAD
@@ -202,25 +208,33 @@ function add_worktree() {
       window_name="$dir_name"
     fi
     
-    session_name="wt-${repo_name}"
-    
-    # Ensure session exists
-    if ! tmux has-session -t "$session_name" 2>/dev/null; then
-      tmux new-session -s "$session_name" -c "$repo_dir" -d
-    fi
-    
-    # Check if window exists, create or switch
-    if tmux list-windows -t "$session_name" -F "#{window_name}" 2>/dev/null | grep -q "^${window_name}$"; then
-      if [ -n "$TMUX" ]; then
-        tmux switch-client -t "${session_name}:${window_name}"
+    # Create window in current session (if in tmux) or org-level session (if not)
+    if [ -n "$TMUX" ]; then
+      # In tmux - create window in current session
+      if tmux list-windows -F "#{window_name}" 2>/dev/null | grep -q "^${window_name}$"; then
+        # Window exists, switch to it
+        tmux select-window -t ":${window_name}"
       else
-        tmux attach-session -t "${session_name}:${window_name}"
+        # Create new window in current session
+        tmux new-window -n "$window_name" -c "$selected_worktree"
       fi
     else
-      tmux new-window -t "$session_name" -n "$window_name" -c "$selected_worktree"
-      if [ -n "$TMUX" ]; then
-        tmux switch-client -t "${session_name}:${window_name}"
+      # Not in tmux - use org-level session
+      org_path="${worktrees_path}/${org_name}"
+      session_name="wt-${org_name}"
+      
+      # Ensure org-level session exists
+      if ! tmux has-session -t "$session_name" 2>/dev/null; then
+        tmux new-session -s "$session_name" -c "$org_path" -d
+      fi
+      
+      # Check if window exists in org session
+      if tmux list-windows -t "$session_name" -F "#{window_name}" 2>/dev/null | grep -q "^${window_name}$"; then
+        # Window exists, attach to it
+        tmux attach-session -t "${session_name}:${window_name}"
       else
+        # Create new window and attach
+        tmux new-window -t "$session_name" -n "$window_name" -c "$selected_worktree"
         tmux attach-session -t "${session_name}:${window_name}"
       fi
     fi
@@ -249,25 +263,33 @@ function add_worktree() {
     window_name="$dir_name"
   fi
   
-  session_name="wt-${repo_name}"
-  
-  # Ensure session exists at repo level
-  if ! tmux has-session -t "$session_name" 2>/dev/null; then
-    tmux new-session -s "$session_name" -c "$repo_dir" -d
-  fi
-  
-  # Check if window already exists
-  if tmux list-windows -t "$session_name" -F "#{window_name}" 2>/dev/null | grep -q "^${window_name}$"; then
-    if [ -n "$TMUX" ]; then
-      tmux switch-client -t "${session_name}:${window_name}"
+  # Create window in current session (if in tmux) or org-level session (if not)
+  if [ -n "$TMUX" ]; then
+    # In tmux - create window in current session
+    if tmux list-windows -F "#{window_name}" 2>/dev/null | grep -q "^${window_name}$"; then
+      # Window exists, switch to it
+      tmux select-window -t ":${window_name}"
     else
-      tmux attach-session -t "${session_name}:${window_name}"
+      # Create new window in current session
+      tmux new-window -n "$window_name" -c "$selected_worktree"
     fi
   else
-    tmux new-window -t "$session_name" -n "$window_name" -c "$selected_worktree"
-    if [ -n "$TMUX" ]; then
-      tmux switch-client -t "${session_name}:${window_name}"
+    # Not in tmux - use org-level session
+    org_path="${worktrees_path}/${org_name}"
+    session_name="wt-${org_name}"
+    
+    # Ensure org-level session exists
+    if ! tmux has-session -t "$session_name" 2>/dev/null; then
+      tmux new-session -s "$session_name" -c "$org_path" -d
+    fi
+    
+    # Check if window exists in org session
+    if tmux list-windows -t "$session_name" -F "#{window_name}" 2>/dev/null | grep -q "^${window_name}$"; then
+      # Window exists, attach to it
+      tmux attach-session -t "${session_name}:${window_name}"
     else
+      # Create new window and attach
+      tmux new-window -t "$session_name" -n "$window_name" -c "$selected_worktree"
       tmux attach-session -t "${session_name}:${window_name}"
     fi
   fi
