@@ -77,11 +77,11 @@ function select_worktree() {
     # Get relative path: crossfit/cfweb
     org_repo="${repo_path#${worktrees_path}/}"
     
-    # Extract org name to check exclusion list
-    org_name=$(echo "$org_repo" | cut -d'/' -f1)
+    # Extract repo name to check exclusion list
+    repo_name=$(basename "$repo_path")
     
-    # Skip excluded orgs
-    if [[ "$org_name" == "ncko" ]] || [[ "$org_name" == "tickets" ]] || [[ "$org_name" == ".opencode" ]]; then
+    # Skip excluded repos
+    if [[ "$repo_name" == "ncko" ]] || [[ "$repo_name" == "tickets" ]] || [[ "$repo_name" == ".opencode" ]]; then
       continue
     fi
     
