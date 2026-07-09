@@ -5,11 +5,21 @@ BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "==> Starting bootstrap install..."
 
-# Initialize git submodules (oh-my-zsh plugins, etc.)
-echo "==> Initializing git submodules..."
+# Initialize git submodules
 DOTFILES_DIR="$(cd "$BOOTSTRAP_DIR/.." && pwd)"
-git -C "$DOTFILES_DIR" submodule init
-git -C "$DOTFILES_DIR" submodule update
+
+# Public submodules (oh-my-zsh plugins, etc.)
+echo "==> Initializing public submodules..."
+git -C "$DOTFILES_DIR" submodule update --init \
+    omz-custom/plugins/fzf-tab \
+    omz-custom/plugins/zsh-autosuggestions
+
+# Private submodules (require SSH access)
+echo "==> Initializing private submodules..."
+if ! git -C "$DOTFILES_DIR" submodule update --init crossfit; then
+    echo "    ⚠ Could not clone 'crossfit' (SSH key may not be set up yet)."
+    echo "    Run 'git submodule update --init crossfit' after configuring SSH."
+fi
 
 # Install Homebrew if not present
 if ! command -v brew &> /dev/null; then

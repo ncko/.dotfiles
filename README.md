@@ -58,6 +58,8 @@ For a completely new machine without SSH access:
 git clone https://github.com/ncko/.dotfiles.git ~/.dotfiles
 
 # 2. Run bootstrap (inits submodules, installs Homebrew + packages)
+#    Public submodules are always initialized. The private crossfit submodule
+#    is attempted but will continue gracefully if SSH isn't set up yet.
 cd ~/.dotfiles
 ./bootstrap/install
 
@@ -66,9 +68,10 @@ cd ~/.dotfiles
 
 # 4. Complete manual 1Password setup (see above)
 
-# 5. Verify SSH works, then init private submodules
+# 5. Verify SSH works, then init private submodules (if skipped in step 2)
 ssh -T git@github.com
-git submodule init crossfit && git submodule update crossfit
+git submodule update --init crossfit
+./mac reinstall
 ```
 
 ---
@@ -82,7 +85,8 @@ Each directory is a stow package. Contents are symlinked relative to `$HOME`.
 | `git` | Git configuration | `.gitconfig` - aliases, delta pager, rebase defaults |
 | `vim` | Editor config | `.vimrc`, `.ideavimrc` (JetBrains) |
 | `zsh` | Shell configuration | `.zshrc`, `.zprofile` |
-| `bin` | Custom scripts | `.local/bin/*` - 15 utility scripts |
+| `bin` | Custom scripts | `.local/bin/*` - 16 utility scripts |
+| `crossfit` | Work config (private) | Git submodule pointing to a private repo |
 | `tmux` | Terminal multiplexer | `.tmux.conf` - Tokyo Night theme |
 | `ghostty` | Terminal emulator | `.config/ghostty/config` |
 | `ssh` | SSH configuration | `.ssh/config` - 1Password SSH agent |
@@ -106,6 +110,17 @@ proj                      # Interactive selection from ~/deck and ~/projects
 proj -d myproject         # Create new project in ~/deck/myproject
 proj -n owner/repo        # Create in ~/projects/owner/repo
 proj -c owner/repo        # Clone GitHub repo to ~/projects/owner/repo
+```
+
+#### `work` - Git Worktree Manager
+Manage bare repos and git worktrees under `~/worktrees/`.
+
+```bash
+work                      # Interactive repo selection (fzf)
+work -w                   # Select a specific worktree/branch (opens as tmux window)
+work -a f/branch-name     # Add worktree (run from inside a bare repo dir)
+work -n org/repo          # Create new bare repo at ~/worktrees/org/repo
+work -c org/repo          # Clone repo as bare repo to ~/worktrees/org/repo
 ```
 
 #### `open-session` - Tmux Session Opener
@@ -211,6 +226,13 @@ Browse archived/deprecated scripts.
 graveyard
 ```
 
+#### `list-boxes` - EC2 Instance Lister
+List running EC2 instances with names and IPs.
+
+```bash
+list-boxes
+```
+
 #### `sort-revisions` - Alembic Helper
 Print Alembic migrations in dependency order.
 
@@ -240,6 +262,7 @@ Requires: `CLICKUP_API_KEY`, `TODOIST_API_KEY` environment variables.
 | `ls` | `eza --icons` | Modern ls with icons |
 | `ll` | `eza -la --icons --git` | Long format with git status |
 | `lt` | `eza --tree --icons` | Tree view |
+| `tree` | `tree --dirsfirst` | Tree with dirs first |
 | `sed` | `gsed` | GNU sed |
 | `awk` | `gawk` | GNU awk |
 
@@ -249,6 +272,7 @@ Requires: `CLICKUP_API_KEY`, `TODOIST_API_KEY` environment variables.
 |-------|-------|
 | `vimconfig` | Neovim config (`~/.dotfiles/nvim/.config/nvim/lua/ncko`) |
 | `vimbin` | Custom scripts (`~/.dotfiles/bin/.local/bin`) |
+| `vimcfbin` | Crossfit scripts (`~/projects/ncko/crossfit/.local/bin`) |
 | `vimdot` | Dotfiles root (`~/.dotfiles`) |
 | `o` | File picker with fzf + bat preview |
 
@@ -379,13 +403,15 @@ tldrf                     # Fuzzy search tldr pages
 | `git cob` | `checkout -b` | Create and switch branch |
 | `git lg` | `log --graph...` | Visual log (20 commits) |
 | `git undo` | `reset HEAD~1 --mixed` | Undo last commit, keep changes |
-| `git stash-all` | `stash --include-untracked` | Stash everything |
+| `git stash-all` | `stash save --include-untracked` | Stash everything |
 | `git wip` | `add -A && commit -m 'WIP'` | Quick WIP commit |
 
 ### URL Shorthands
 
 ```bash
-git clone gh:owner/repo   # Clones git@github.com:owner/repo
+git clone gh:owner/repo       # Clones git@github.com:owner/repo
+git clone github:owner/repo   # Same as above (longer form)
+git clone gst:owner/repo      # Clones from GitHub via HTTPS
 ```
 
 ### Settings
@@ -428,6 +454,7 @@ Managed via `bootstrap/Brewfile`.
 | `stow` | Symlink manager |
 | `tmux` | Terminal multiplexer |
 | `zoxide` | Smart cd (`z`) |
+| `opencode` | AI coding assistant |
 | `1password-cli` | CLI for secrets automation |
 
 ### Database & Cloud
@@ -452,12 +479,18 @@ Managed via `bootstrap/Brewfile`.
 | `rsync` | File sync |
 | `fswatch` | File watcher |
 
+### Fonts
+
+| Font | Description |
+|------|-------------|
+| `font-jetbrains-mono-nerd-font` | JetBrains Mono with Nerd Font icons |
+
 ### GUI Applications (Casks)
 
 | App | Description |
 |-----|-------------|
 | `claude-code` | Claude Code IDE |
-| `docker` | Container platform |
+| `docker-desktop` | Container platform |
 | `ghostty` | Terminal emulator |
 | `1password` | Password manager with SSH agent |
 | `github` | GitHub Desktop |
@@ -487,10 +520,10 @@ alias myalias="custom command"
 
 The `crossfit/` directory is a git submodule pointing to a private repository.
 
-Public submodules (oh-my-zsh plugins) are initialized automatically by `./bootstrap/install`.
+Public submodules (oh-my-zsh plugins) are always initialized by `./bootstrap/install`. The private crossfit submodule is attempted automatically but continues gracefully if SSH isn't configured yet.
 
-To init the private crossfit submodule (requires SSH access):
+To manually init the crossfit submodule later (requires SSH access):
 
 ```bash
-git submodule init crossfit && git submodule update crossfit
+git submodule update --init crossfit
 ```
