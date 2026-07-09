@@ -5,6 +5,15 @@ BOOTSTRAP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "==> Starting bootstrap install..."
 
+# Install Oh My Zsh if not present
+if [[ ! -d "$HOME/.oh-my-zsh" ]]; then
+    echo "==> Installing Oh My Zsh..."
+    RUNZSH=no KEEP_ZSHRC=yes \
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+else
+    echo "==> Oh My Zsh already installed"
+fi
+
 # Initialize git submodules
 DOTFILES_DIR="$(cd "$BOOTSTRAP_DIR/.." && pwd)"
 
