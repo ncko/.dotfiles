@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+NVIM_CONFIG_DIR="$HOME/.config/nvim"
+NVIM_CONFIG_REPO="https://github.com/ncko/mynvim.git"
+
+install_nvim_config() {
+    echo "Installing nvim config..."
+
+    if [[ -d "$NVIM_CONFIG_DIR" ]]; then
+        echo "nvim config already present at $NVIM_CONFIG_DIR"
+        return
+    fi
+
+    mkdir -p "$(dirname "$NVIM_CONFIG_DIR")"
+    if ! git clone "$NVIM_CONFIG_REPO" "$NVIM_CONFIG_DIR"; then
+        echo "    ⚠ Could not clone nvim config."
+        echo "    Run 'git clone $NVIM_CONFIG_REPO $NVIM_CONFIG_DIR' to try again."
+        return
+    fi
+
+    echo "nvim config installed to $NVIM_CONFIG_DIR"
+}
+
+update_nvim_config() {
+    echo "Updating nvim config..."
+
+    if [[ ! -d "$NVIM_CONFIG_DIR" ]]; then
+        echo "nvim config not installed, running install..."
+        install_nvim_config
+        return
+    fi
+
+    git -C "$NVIM_CONFIG_DIR" pull --ff-only
+    echo "nvim config updated successfully"
+}
+
+case "${1:-install}" in
+    install)
+        install_nvim_config
+        ;;
+    update)
+        update_nvim_config
+        ;;
+    *)
+        echo "Usage: $0 {install|update}"
+        exit 1
+        ;;
+esac
