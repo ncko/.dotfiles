@@ -30,6 +30,24 @@ if ! git -C "$DOTFILES_DIR" submodule update --init crossfit; then
     echo "    Run 'git submodule update --init crossfit' after configuring SSH."
 fi
 
+# Generate machine-specific git user config (~/.gitconfig_user)
+# This is included by git/.gitconfig but not tracked, since name/email
+# may differ per machine.
+GITCONFIG_USER="$HOME/.gitconfig_user"
+if [[ -f "$GITCONFIG_USER" ]]; then
+    echo "==> git user config already exists ($GITCONFIG_USER)"
+else
+    echo "==> Generating git user config..."
+    read -rp "    Git user.name: " git_user_name
+    read -rp "    Git user.email: " git_user_email
+    cat > "$GITCONFIG_USER" <<EOF
+[user]
+	name = $git_user_name
+	email = $git_user_email
+EOF
+    echo "    Wrote $GITCONFIG_USER"
+fi
+
 # Install Homebrew if not present
 if ! command -v brew &> /dev/null; then
     echo "==> Installing Homebrew..."
