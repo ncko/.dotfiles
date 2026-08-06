@@ -39,7 +39,7 @@ update_neovim() {
     git fetch origin stable
 
     LOCAL=$(git rev-parse HEAD)
-    REMOTE=$(git rev-parse origin/stable)
+    REMOTE=$(git rev-parse FETCH_HEAD)
 
     if [[ "$LOCAL" == "$REMOTE" ]]; then
         echo "Neovim is already up to date"
