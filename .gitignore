@@ -12,3 +12,5 @@ ghostty/**
 !/ghostty/.config/
 !/ghostty/.config/ghostty/
 !/ghostty/.config/ghostty/**
+
+.claude/**
