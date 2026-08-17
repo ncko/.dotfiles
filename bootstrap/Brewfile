@@ -21,6 +21,7 @@ brew "stow"
 brew "tmux"
 brew "watch"
 brew "zoxide"
+brew "pnpm"
 
 # Database Tools
 brew "mysql-client"                    # MySQL CLI client (mysql, mysqldump, etc.)
