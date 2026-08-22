@@ -22,6 +22,7 @@ brew "tmux"
 brew "watch"
 brew "zoxide"
 brew "pnpm"
+brew "gitleaks"
 
 # Database Tools
 brew "mysql-client"                    # MySQL CLI client (mysql, mysqldump, etc.)
