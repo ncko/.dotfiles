@@ -1,0 +1,483 @@
+#!/usr/bin/env bash
+
+# peek - a git repo dashboard, designed to be run under `watch`
+#
+# peek                 # dashboard for the repo you're standing in
+# peek ~/projects/foo  # dashboard for another repo
+# peek -w              # re-run itself under `watch` every 2s
+# peek -w 5 -ba        # every 5s, with branches and all optional sections
+
+set -u
+
+repo="."
+commits=5
+show_branches=0
+show_stash=0
+show_subs=0
+show_legend=0
+watch_interval=""
+use_color=1
+
+# ── colors ──────────────────────────────────────────────────────────────────
+# raw ANSI rather than tput: `watch` runs us without a tty, and we still want
+# color (paired with `watch -c`).
+setup_colors() {
+  if [ "$use_color" -eq 1 ] && [ -z "${NO_COLOR:-}" ]; then
+    C_RST=$'\033[0m'; C_B=$'\033[1m'; C_DIM=$'\033[2m'
+    C_RED=$'\033[31m'; C_GRN=$'\033[32m'; C_YEL=$'\033[33m'
+    C_BLU=$'\033[34m'; C_MAG=$'\033[35m'; C_CYN=$'\033[36m'
+    C_BRED=$'\033[1;31m'; C_BGRN=$'\033[1;32m'; C_BYEL=$'\033[1;33m'
+  else
+    C_RST=""; C_B=""; C_DIM=""
+    C_RED=""; C_GRN=""; C_YEL=""; C_BLU=""; C_MAG=""; C_CYN=""
+    C_BRED=""; C_BGRN=""; C_BYEL=""
+  fi
+}
+
+# ── helpers ─────────────────────────────────────────────────────────────────
+g() { git -C "$repo" -c core.quotepath=false "$@" 2>/dev/null; }
+
+width() {
+  local w="${COLUMNS:-}"
+  [ -z "$w" ] && w=$(tput cols 2>/dev/null)
+  case "$w" in ''|*[!0-9]*) w=80;; esac
+  [ "$w" -lt 40 ] && w=40
+  echo "$w"
+}
+
+rule() {
+  local w; w=$(width)
+  printf "%s" "$C_DIM"
+  printf '─%.0s' $(seq 1 "$w")
+  printf "%s\n" "$C_RST"
+}
+
+mtime() { stat -f %m "$1" 2>/dev/null || stat -c %Y "$1" 2>/dev/null; }
+
+reltime() { # seconds -> "12s" / "4m" / "2h" / "3d"
+  local s=$1
+  if   [ "$s" -lt 60 ];    then echo "${s}s"
+  elif [ "$s" -lt 3600 ];  then echo "$((s / 60))m"
+  elif [ "$s" -lt 86400 ]; then echo "$((s / 3600))h"
+  else echo "$((s / 86400))d"
+  fi
+}
+
+section() { printf "\n%s%s%s%s\n" "$C_B" "$C_CYN" "$1" "$C_RST"; }
+
+# awk snippet, prepended to any program that needs it: git's "2 weeks ago" is
+# too wide for a dashboard column, so squeeze it down to "2w".
+AWK_AGO='
+function ago(s,   t, u) {
+  split(s, t, " ")
+  if (t[1] == "just") return "now"
+  u = t[2]
+  if (u ~ /^second/) return t[1] "s"
+  if (u ~ /^minute/) return t[1] "m"
+  if (u ~ /^hour/)   return t[1] "h"
+  if (u ~ /^day/)    return t[1] "d"
+  if (u ~ /^week/)   return t[1] "w"
+  if (u ~ /^month/)  return t[1] "mo"
+  if (u ~ /^year/)   return t[1] "y"
+  return s
+}
+'
+
+# ── the change renderer ─────────────────────────────────────────────────────
+# Prints one colored line per changed file: glyph, path, +added/-deleted, and a
+# proportional bar.
+#
+# Takes three -z streams (NULs turned into newlines) and joins them on path —
+# rather than by line order, which renames break: `--numstat` emits a rename as
+# three records where `--name-status` emits it as two.
+#
+#   $2 conflicts   : PATH per record (these are skipped; they get their own section)
+#   $3 numstat     : "ADD\tDEL\tPATH"  |  "ADD\tDEL\t" then OLD then NEW
+#   $4 name-status : "STATUS" then PATH  |  "R100" then OLD then NEW
+#
+# Each stream is prefixed with a sentinel so awk can tell them apart even when
+# one is empty (which is why FNR==1 / NR==FNR won't do).
+render_changes() {
+  local label="$1"
+  awk -F'\t' \
+    -v label="$label" -v w="$(width)" \
+    -v c_rst="$C_RST" -v c_b="$C_B" -v c_dim="$C_DIM" -v c_cyn="$C_CYN" \
+    -v c_add="$C_GRN" -v c_mod="$C_YEL" -v c_del="$C_RED" \
+    -v c_ren="$C_BLU" -v c_typ="$C_MAG" -v c_cnf="$C_BRED" '
+    function bar(a, d,   n, out, i, scale) {
+      if (maxch <= 0) return ""
+      scale = 10.0 / maxch
+      out = c_add
+      n = int(a * scale + 0.5); if (a > 0 && n == 0) n = 1
+      for (i = 0; i < n; i++) out = out "+"
+      out = out c_rst c_del
+      n = int(d * scale + 0.5); if (d > 0 && n == 0) n = 1
+      for (i = 0; i < n; i++) out = out "-"
+      return out c_rst
+    }
+    function emit(st, display, key,   s, gl, col, a, d, binary, ch) {
+      if (key in conflict) return
+      s = substr(st, 1, 1)
+      if      (s == "A") { gl = "+"; col = c_add }
+      else if (s == "M") { gl = "~"; col = c_mod }
+      else if (s == "D") { gl = "-"; col = c_del }
+      else if (s == "R") { gl = ">"; col = c_ren }
+      else if (s == "C") { gl = ">"; col = c_ren }
+      else if (s == "T") { gl = "%"; col = c_typ }
+      else if (s == "U") { gl = "!"; col = c_cnf }
+      else               { gl = "?"; col = c_dim }
+
+      a = add[key]; d = del[key]
+      binary = (a == "-" || d == "-")
+      if (binary) { a = 0; d = 0 }
+
+      n++
+      st_a[n] = a + 0; st_d[n] = d + 0
+      st_gl[n] = gl; st_col[n] = col; st_p[n] = display; st_bin[n] = binary
+      tot_a += a + 0; tot_d += d + 0
+      ch = (a + 0) + (d + 0)
+      if (ch > maxch) maxch = ch
+    }
+
+    $0 == "@@peek@@" { fidx++; next }
+
+    # pass 1: the conflicted paths, so the other passes can skip them
+    fidx == 1 { if ($0 != "") conflict[$0] = 1; next }
+
+    # pass 2: numstat -> add[path], del[path]
+    fidx == 2 {
+      if (nwant == 1) { nwant = 2; next }
+      if (nwant == 2) { add[$0] = pa; del[$0] = pd; nwant = 0; next }
+      pa = $1; pd = $2
+      if (NF < 3 || $3 == "") { nwant = 1 } else { add[$3] = pa; del[$3] = pd }
+      next
+    }
+
+    # pass 3: name-status -> the rendered rows
+    {
+      if (swant == 1) { swant = 0; emit(sst, $0, $0); next }
+      if (swant == 2) { sold = $0; swant = 3; next }
+      if (swant == 3) { swant = 0; emit(sst, sold " -> " $0, $0); next }
+      sst = $0
+      swant = (sst ~ /^[RC]/) ? 2 : 1
+    }
+    END {
+      if (n == 0) exit
+      printf "\n%s%s%s %s(%d)%s", c_b c_cyn, label, c_rst, c_dim, n, c_rst
+      if (tot_a || tot_d)
+        printf "  %s+%d%s %s-%d%s", c_add, tot_a, c_rst, c_del, tot_d, c_rst
+      printf "\n"
+
+      # column budget: 2 indent + 2 glyph + path + 12 counts + 11 bar
+      pw = w - 27
+      if (pw < 18) pw = 18
+      wide = (w >= 68)
+
+      for (i = 1; i <= n; i++) {
+        p = st_p[i]
+        if (length(p) > pw) p = "..." substr(p, length(p) - pw + 4)
+        printf "  %s%s%s %-*s", st_col[i], st_gl[i], c_rst, pw, p
+        if (wide) {
+          if (st_bin[i]) printf " %s%10s%s", c_dim, "binary", c_rst
+          else printf " %s+%-4d%s %s-%-4d%s %s", c_add, st_a[i], c_rst, c_del, st_d[i], c_rst, bar(st_a[i], st_d[i])
+        }
+        printf "\n"
+      }
+    }' "$2" "$3" "$4"
+}
+
+conflict_paths() { printf '@@peek@@\n'; g diff --name-only --diff-filter=U -z | tr '\0' '\n'; }
+
+# ── sections ────────────────────────────────────────────────────────────────
+header() {
+  local name branch upstream ahead behind counts stash_n op
+  name=$(basename "$(g rev-parse --show-toplevel)")
+  branch=$(g symbolic-ref --short HEAD)
+
+  local left_p="" left_c=""
+  add() { left_p="$left_p$2"; left_c="$left_c$1$2$C_RST"; }
+
+  add "$C_B$C_MAG" "$name"
+  add "$C_DIM" "  ·  "
+
+  if [ -n "$branch" ]; then
+    add "$C_B$C_GRN" "$branch"
+  else
+    add "$C_BRED" "detached @ $(g rev-parse --short HEAD)"
+  fi
+
+  upstream=$(g rev-parse --abbrev-ref '@{upstream}')
+  if [ -n "$upstream" ]; then
+    counts=$(g rev-list --left-right --count "@{upstream}...HEAD")
+    behind=$(echo "$counts" | cut -f1)
+    ahead=$(echo "$counts" | cut -f2)
+    [ "${ahead:-0}" -gt 0 ] && add "$C_BGRN" " ↑$ahead"
+    [ "${behind:-0}" -gt 0 ] && add "$C_BYEL" " ↓$behind"
+    add "$C_DIM" "  →  $upstream"
+  else
+    add "$C_DIM" "  (no upstream)"
+  fi
+
+  stash_n=$(g stash list | wc -l | tr -d ' ')
+  [ "${stash_n:-0}" -gt 0 ] && add "$C_CYN" "  ⚑ ${stash_n} stashed"
+
+  # right-aligned clock
+  local right="$(date '+%H:%M:%S')" w pad
+  w=$(width)
+  pad=$((w - ${#left_p} - ${#right}))
+  [ "$pad" -lt 1 ] && pad=1
+  printf "%s%*s%s%s%s\n" "$left_c" "$pad" "" "$C_DIM" "$right" "$C_RST"
+
+  # in-progress operations get their own loud line
+  op=$(in_progress)
+  [ -n "$op" ] && printf "%s  %s  %s\n" "$C_BRED" "$op" "$C_RST"
+}
+
+in_progress() {
+  local gd; gd=$(g rev-parse --absolute-git-dir)
+  [ -z "$gd" ] && return
+
+  if [ -d "$gd/rebase-merge" ] || [ -d "$gd/rebase-apply" ]; then
+    local cur tot d
+    d="$gd/rebase-merge"; [ -d "$d" ] || d="$gd/rebase-apply"
+    cur=$(cat "$d/msgnum" 2>/dev/null || cat "$d/next" 2>/dev/null)
+    tot=$(cat "$d/end" 2>/dev/null || cat "$d/last" 2>/dev/null)
+    if [ -n "$cur" ] && [ -n "$tot" ]; then echo "⚠ REBASE IN PROGRESS ($cur/$tot)"
+    else echo "⚠ REBASE IN PROGRESS"; fi
+  elif [ -f "$gd/MERGE_HEAD" ];       then echo "⚠ MERGE IN PROGRESS"
+  elif [ -f "$gd/CHERRY_PICK_HEAD" ]; then echo "⚠ CHERRY-PICK IN PROGRESS"
+  elif [ -f "$gd/REVERT_HEAD" ];      then echo "⚠ REVERT IN PROGRESS"
+  elif [ -f "$gd/BISECT_LOG" ];       then echo "⚠ BISECT IN PROGRESS"
+  fi
+}
+
+activity() {
+  local now gd fetched newest f m parts=""
+  now=$(date +%s)
+
+  # most recent write to any dirty file — "is somebody typing right now?"
+  newest=0
+  while IFS= read -r f; do
+    [ -e "$repo/$f" ] || continue
+    m=$(mtime "$repo/$f")
+    [ -n "$m" ] && [ "$m" -gt "$newest" ] && newest=$m
+  done < <(g status --porcelain | sed 's/^...//;s/.* -> //' | head -200)
+
+  if [ "$newest" -gt 0 ]; then
+    parts="last edit $(reltime $((now - newest))) ago"
+  fi
+
+  gd=$(g rev-parse --absolute-git-dir)
+  if [ -n "$gd" ] && [ -f "$gd/FETCH_HEAD" ]; then
+    fetched=$(mtime "$gd/FETCH_HEAD")
+    [ -n "$fetched" ] && parts="${parts:+$parts  ·  }fetched $(reltime $((now - fetched))) ago"
+  fi
+
+  [ -n "$parts" ] && printf "%s  %s%s\n" "$C_DIM" "$parts" "$C_RST"
+}
+
+conflicts() {
+  local list f n pw; list=$(g diff --name-only --diff-filter=U)
+  [ -z "$list" ] && return
+  section "CONFLICTS"
+  pw=$(( $(width) - 27 )); [ "$pw" -lt 18 ] && pw=18
+  while IFS= read -r f; do
+    # unresolved hunks remaining — this ticks down as they work through them
+    n=$(grep -c '^<<<<<<<' "$repo/$f" 2>/dev/null | tr -d ' ')
+    printf "  %s!%s %s%-*s%s %s%s%s\n" \
+      "$C_BRED" "$C_RST" "$C_BRED" "$pw" "$f" "$C_RST" \
+      "$C_DIM" "${n:-?} unresolved" "$C_RST"
+  done <<< "$list"
+}
+
+staged() {
+  render_changes "STAGED" \
+    <(conflict_paths) \
+    <(printf '@@peek@@\n'; g diff --cached --numstat     -M -z | tr '\0' '\n') \
+    <(printf '@@peek@@\n'; g diff --cached --name-status -M -z | tr '\0' '\n')
+}
+
+unstaged() {
+  render_changes "UNSTAGED" \
+    <(conflict_paths) \
+    <(printf '@@peek@@\n'; g diff --numstat     -M -z | tr '\0' '\n') \
+    <(printf '@@peek@@\n'; g diff --name-status -M -z | tr '\0' '\n')
+}
+
+untracked() {
+  local list n; list=$(g ls-files --others --exclude-standard --directory --no-empty-directory)
+  [ -z "$list" ] && return
+  n=$(printf '%s\n' "$list" | wc -l | tr -d ' ')
+  printf "\n%s%sUNTRACKED%s %s(%d)%s\n" "$C_B" "$C_CYN" "$C_RST" "$C_DIM" "$n" "$C_RST"
+  local pw f count; pw=$(( $(width) - 27 )); [ "$pw" -lt 18 ] && pw=18
+  while IFS= read -r f; do
+    case "$f" in
+      */) count=$(find "$repo/$f" -type f 2>/dev/null | wc -l | tr -d ' '); count="$count files";;
+      *)  count=$(wc -l < "$repo/$f" 2>/dev/null | tr -d ' ')
+          if [ "${count:-0}" = "1" ]; then count="1 line"; else count="${count:-?} lines"; fi;;
+    esac
+    printf "  %s+%s %-*s %s%s%s\n" "$C_GRN" "$C_RST" "$pw" "$f" "$C_DIM" "$count" "$C_RST"
+  done <<< "$list"
+}
+
+recent_commits() {
+  [ "$commits" -le 0 ] && return
+  local log; log=$(g log -n "$commits" --format='%h%x09%ar%x09%an%x09%s')
+  [ -z "$log" ] && return
+  section "RECENT COMMITS"
+  awk -F'\t' -v w="$(width)" \
+      -v c_rst="$C_RST" -v c_dim="$C_DIM" -v c_yel="$C_YEL" -v c_cyn="$C_CYN" \
+      "$AWK_AGO"'
+    {
+      sw = w - 31; if (sw < 20) sw = 20
+      s = $4; if (length(s) > sw) s = substr(s, 1, sw - 1) "…"
+      a = $3; if (length(a) > 10) a = substr(a, 1, 10)
+      printf "  %s%s%s %s%-6s%s %s%-10s%s %s\n",
+        c_yel, $1, c_rst, c_dim, ago($2), c_rst, c_cyn, a, c_rst, s
+    }' <<< "$log"
+}
+
+branches() {
+  local out
+  out=$(g for-each-ref --sort=-committerdate refs/heads \
+        --format='%(refname:short)%09%(committerdate:relative)%09%(HEAD)%09%(contents:subject)' \
+        --count=8)
+  [ -z "$out" ] && return
+  section "BRANCHES"
+  awk -F'\t' -v w="$(width)" \
+      -v c_rst="$C_RST" -v c_dim="$C_DIM" -v c_grn="$C_GRN" -v c_b="$C_B" \
+      "$AWK_AGO"'
+    {
+      mark = ($3 == "*") ? "*" : " "
+      col  = ($3 == "*") ? c_b c_grn : ""
+      sw = w - 41; if (sw < 15) sw = 15
+      s = $4; if (length(s) > sw) s = substr(s, 1, sw - 1) "…"
+      printf "  %s%s %-28s%s %s%-6s %s%s\n", col, mark, $1, c_rst, c_dim, ago($2), s, c_rst
+    }' <<< "$out"
+}
+
+stashes() {
+  local out; out=$(g stash list --format='%gd%x09%ar%x09%gs')
+  [ -z "$out" ] && return
+  section "STASHES"
+  awk -F'\t' -v c_rst="$C_RST" -v c_dim="$C_DIM" -v c_cyn="$C_CYN" "$AWK_AGO"'
+    { printf "  %s%-10s%s %s%-6s%s %s\n", c_cyn, $1, c_rst, c_dim, ago($2), c_rst, $3 }' <<< "$out"
+}
+
+submodules() {
+  local out; out=$(g submodule status 2>/dev/null)
+  [ -z "$out" ] && return
+  section "SUBMODULES"
+  awk -v w="$(width)" \
+      -v c_rst="$C_RST" -v c_dim="$C_DIM" -v c_grn="$C_GRN" -v c_yel="$C_YEL" -v c_red="$C_RED" '
+    {
+      p = substr($0, 1, 1)
+      if      (p == "+") { col = c_yel; gl = "~" }   # checked out at a different commit
+      else if (p == "-") { col = c_red; gl = "-" }   # not initialized
+      else if (p == "U") { col = c_red; gl = "!" }   # merge conflicts
+      else               { col = c_grn; gl = "=" }
+      sha = $1; sub(/^[-+U]/, "", sha)
+      pw = w - 15; if (pw < 18) pw = 18
+      name = $2
+      if (length(name) > pw) name = "..." substr(name, length(name) - pw + 4)
+      printf "  %s%s%s %-*s %s%s%s\n", col, gl, c_rst, pw, name, c_dim, substr(sha, 1, 8), c_rst
+    }' <<< "$out"
+}
+
+legend() {
+  printf "\n%s  + new   ~ modified   - deleted   > renamed   %% typechange   ! conflict%s\n" \
+    "$C_DIM" "$C_RST"
+}
+
+clean_note() {
+  local dirty; dirty=$(g status --porcelain)
+  [ -n "$dirty" ] && return
+  printf "\n  %s✓ working tree clean%s\n" "$C_GRN" "$C_RST"
+}
+
+# ── entry ───────────────────────────────────────────────────────────────────
+help() {
+  local b n; b=$(tput bold 2>/dev/null); n=$(tput sgr0 2>/dev/null)
+  echo "${b}USAGE${n}"
+  echo "  peek [path] [flags]"
+  echo ""
+  echo "${b}FLAGS${n}"
+  echo "  -w [secs]  re-run under watch (default 2s)"
+  echo "  -c N       number of recent commits to show (default 5, 0 to hide)"
+  echo "  -b         show recent branches"
+  echo "  -s         show stashes"
+  echo "  -m         show submodules"
+  echo "  -l         show the glyph legend"
+  echo "  -a         show all optional sections (-bsml)"
+  echo "  -C         disable color"
+  echo "  -h         print this message"
+  echo ""
+  echo "${b}GLYPHS${n}"
+  echo "  +  new file      ~  modified     -  deleted"
+  echo "  >  renamed       %  typechange   !  conflict"
+  echo ""
+  echo "${b}EXAMPLES${n}"
+  echo "Dashboard for the current repo"
+  echo "  \$ peek"
+  echo ""
+  echo "Watch a repo somebody else is working in"
+  echo "  \$ peek -w ~/projects/crossfit/cfweb"
+  echo ""
+  echo "Watch every 5 seconds, everything on"
+  echo "  \$ peek -w 5 -a"
+  echo ""
+  echo "Equivalent, by hand"
+  echo "  \$ watch -tc -n 5 peek -a ~/projects/crossfit/cfweb"
+  echo ""
+}
+
+forwarded=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -w)
+      # optional numeric argument
+      if [ $# -gt 1 ]; then
+        case "$2" in [0-9]*) watch_interval="$2"; shift;; *) watch_interval=2;; esac
+      else
+        watch_interval=2
+      fi
+      ;;
+    -c) commits="$2"; forwarded+=("-c" "$2"); shift;;
+    -b) show_branches=1; forwarded+=("-b");;
+    -s) show_stash=1;    forwarded+=("-s");;
+    -m) show_subs=1;     forwarded+=("-m");;
+    -l) show_legend=1;   forwarded+=("-l");;
+    -a) show_branches=1; show_stash=1; show_subs=1; show_legend=1; forwarded+=("-a");;
+    -C) use_color=0;     forwarded+=("-C");;
+    -h|--help) help; exit 0;;
+    -*) echo "peek: unknown flag $1" >&2; help; exit 1;;
+    *)  repo="$1"; forwarded+=("$1");;
+  esac
+  shift
+done
+
+[ -d "$repo" ] || { echo "peek: no such directory: $repo" >&2; exit 1; }
+git -C "$repo" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+  || { echo "peek: not a git repository: $repo" >&2; exit 1; }
+
+if [ -n "$watch_interval" ]; then
+  command -v watch >/dev/null 2>&1 || { echo "peek: watch is not installed (brew install watch)" >&2; exit 1; }
+  self="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+  exec watch -t -c -n "$watch_interval" "$self" "${forwarded[@]+${forwarded[@]}}"
+fi
+
+setup_colors
+header
+activity
+rule
+conflicts
+staged
+unstaged
+untracked
+clean_note
+recent_commits
+[ "$show_branches" -eq 1 ] && branches
+[ "$show_stash" -eq 1 ] && stashes
+[ "$show_subs" -eq 1 ] && submodules
+[ "$show_legend" -eq 1 ] && legend
+echo
