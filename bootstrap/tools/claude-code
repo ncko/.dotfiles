@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Release channel: "latest" (rolling) or "stable" (lags behind), or a pinned
+# version like "2.1.282". Homebrew's cask tracks "stable", which is why this is
+# installed natively instead.
+CHANNEL="${CLAUDE_CHANNEL:-latest}"
+CLAUDE_BIN="$HOME/.local/bin/claude"
+
+claude_version() {
+    [[ -x "$CLAUDE_BIN" ]] || return 0
+    "$CLAUDE_BIN" --version 2>/dev/null | awk '{print $1}'
+}
+
+install_claude_code() {
+    echo "Installing Claude Code ($CHANNEL)..."
+
+    # Bootstraps the launcher at $CLAUDE_BIN; the native build self-manages
+    # versions under ~/.local/share/claude/versions
+    curl -fsSL https://claude.ai/install.sh | bash -s "$CHANNEL"
+
+    echo "Claude Code installed to $CLAUDE_BIN"
+}
+
+update_claude_code() {
+    echo "Updating Claude Code..."
+
+    if [[ ! -x "$CLAUDE_BIN" ]]; then
+        echo "Claude Code not installed, running install..."
+        install_claude_code
+        return
+    fi
+
+    local before after
+    before=$(claude_version)
+
+    # Re-resolves the channel and no-ops when already current. Preferred over
+    # `claude update`, which does not take a channel and follows "stable".
+    "$CLAUDE_BIN" install "$CHANNEL"
+
+    after=$(claude_version)
+
+    if [[ "$before" == "$after" ]]; then
+        echo "Claude Code is already up to date ($after)"
+    else
+        echo "Claude Code updated successfully ($before -> $after)"
+    fi
+}
+
+case "${1:-install}" in
+    install)
+        install_claude_code
+        ;;
+    update)
+        update_claude_code
+        ;;
+    *)
+        echo "Usage: $0 {install|update}"
+        exit 1
+        ;;
+esac

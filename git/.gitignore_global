@@ -10,3 +10,5 @@ tools/auth0/env/
 tools/auth0/experiments/
 CLAUDE.md
 GEMINI.md
+
+**/.claude/settings.local.json

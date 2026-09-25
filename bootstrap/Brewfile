@@ -48,7 +48,6 @@ cask "1password"                        # Password manager (includes SSH agent)
 cask "1password-cli"                    # CLI for secrets automation
 
 # Casks
-cask "claude-code"
 cask "docker-desktop"
 cask "font-jetbrains-mono-nerd-font"
 cask "ghostty"
