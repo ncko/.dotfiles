@@ -97,3 +97,4 @@ eval "$(zoxide init zsh)"
 
 # starship prompt
 eval "$(starship init zsh)"
+export GITHUB_MCP_TOKEN=$(gh auth token)

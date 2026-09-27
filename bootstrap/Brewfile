@@ -23,6 +23,8 @@ brew "watch"
 brew "zoxide"
 brew "pnpm"
 brew "gitleaks"
+brew "s3cmd"
+brew "synthing"
 
 # Database Tools
 brew "mysql-client"                    # MySQL CLI client (mysql, mysqldump, etc.)
